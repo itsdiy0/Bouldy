@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers import documents
+
 app = FastAPI(
     title="Bouldy API",
     description="AI-Powered Chatbot Platform for Document-Based Knowledge Retrieval",
@@ -15,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(documents.router, prefix="/api")
 
 @app.get("/health")
 def health_check():
