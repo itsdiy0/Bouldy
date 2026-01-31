@@ -43,13 +43,14 @@ export default function Sidebar() {
             style={{ backgroundColor: '#37353E' }}
         >
 
-            <div className="p-3 border-b" style={{ borderColor: '#715A5A40' }}>
+            <div className="p-1 border-b" style={{ borderColor: '#715A5A40' }}>
                 <Link href="/dashboard" className="flex items-center gap-3">
                     <Image
-                        src="/Bouldy.webp"
+                        src="/Bouldy.png"
                         alt="Bouldy Logo"
-                        width={50}
-                        height={50}
+                        width={80}
+                        height={80}
+                        style={{ marginLeft: '20px',marginRight: '-15px' }}
                     />
                     <h1 className="text-xl font-bold" style={{ color: '#D3DAD9', fontSize: "1.5rem" }}>
                         Bouldy
