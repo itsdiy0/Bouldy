@@ -1,10 +1,12 @@
 import uuid
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models import Document, User
 from app.schemas import DocumentResponse, DocumentListResponse
 from app.storage import upload_file, delete_file
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -14,17 +16,6 @@ ALLOWED_TYPES = {
     "text/plain": "txt",
 }
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
-
-
-def get_current_user(db: Session = Depends(get_db)) -> User:
-    """Temporary: return or create a dev user. Replace with real auth later."""
-    user = db.query(User).filter(User.email == "dev@bouldy.local").first()
-    if not user:
-        user = User(email="dev@bouldy.local", name="Dev User")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
 
 
 @router.post("", response_model=DocumentResponse)
