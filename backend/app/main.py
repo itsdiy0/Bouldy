@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import documents, chatbots, auth
-
-app = FastAPI( documents
+from app.routers import auth, documents, chatbots
 
 app = FastAPI(
     title="Bouldy API",
@@ -18,7 +16,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
