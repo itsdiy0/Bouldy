@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Upload, FileText, Trash2, Grid, List, AlertCircle, File, Bot, Check } from "lucide-react";
-import DashboardLayout from "../components/layout/DashboardLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { getDocuments, uploadDocument, deleteDocument, Document } from "@/lib/api";
 
 function formatFileSize(bytes: number): string {

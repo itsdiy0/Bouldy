@@ -1,3 +1,5 @@
+import { getSession } from "next-auth/react";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface Document {
@@ -15,12 +17,24 @@ export interface DocumentListResponse {
   total: number;
 }
 
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    throw new Error("Not authenticated");
+  }
+  return {
+    "X-User-Id": session.user.id,
+  };
+}
+
 export async function uploadDocument(file: File): Promise<Document> {
+  const headers = await getAuthHeaders();
   const formData = new FormData();
   formData.append("file", file);
 
   const res = await fetch(`${API_URL}/api/documents`, {
     method: "POST",
+    headers,
     body: formData,
   });
 
@@ -33,7 +47,8 @@ export async function uploadDocument(file: File): Promise<Document> {
 }
 
 export async function getDocuments(): Promise<DocumentListResponse> {
-  const res = await fetch(`${API_URL}/api/documents`);
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/documents`, { headers });
 
   if (!res.ok) {
     throw new Error("Failed to fetch documents");
@@ -43,8 +58,10 @@ export async function getDocuments(): Promise<DocumentListResponse> {
 }
 
 export async function deleteDocument(id: string): Promise<void> {
+  const headers = await getAuthHeaders();
   const res = await fetch(`${API_URL}/api/documents/${id}`, {
     method: "DELETE",
+    headers,
   });
 
   if (!res.ok) {

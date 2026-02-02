@@ -1,5 +1,5 @@
 "use client"
-import DashboardLayout from "../components/layout/DashboardLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardBody, CardHeader } from "@heroui/react";
 
 export default function DashboardPage() {
