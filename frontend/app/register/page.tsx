@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState,useEffect } from "react";
+import { signIn ,useSession} from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,7 +15,14 @@ export default function RegisterPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-
+    const { status } = useSession();
+  
+    useEffect(() => {
+      if (status === "authenticated") {
+        router.push("/dashboard");
+      }
+    }, [status, router]);
+  
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -50,7 +57,18 @@ export default function RegisterPage() {
             setIsLoading(false);
         }
     };
-
+    if (status === "loading" || status === "authenticated") {
+        return (
+          <div
+            className="min-h-screen flex items-center justify-center"
+            style={{ backgroundColor: "#37353E" }}
+          >
+            <div className="animate-pulse" style={{ color: "#D3DAD9" }}>
+              Loading...
+            </div>
+          </div>
+        );
+      }
     return (
         <div className="min-h-screen flex" style={{ backgroundColor: "#37353E" }}>
 
