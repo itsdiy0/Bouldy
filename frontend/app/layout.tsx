@@ -3,6 +3,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { HeroUIProvider } from "@heroui/react";
+import SessionProvider from "@/components/providers/SessionProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,9 +15,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={inter.className}>
-        <HeroUIProvider>
-          {children}
-        </HeroUIProvider>
+        <SessionProvider>
+          <HeroUIProvider>
+            {children}
+          </HeroUIProvider>
+        </SessionProvider>
       </body>
     </html>
   );
