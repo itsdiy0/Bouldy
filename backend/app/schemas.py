@@ -33,6 +33,15 @@ class ChatbotCreate(BaseModel):
     api_key: str | None = None
 
 
+class ChatbotUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    document_ids: list[UUID] | None = None
+    llm_provider: str | None = None
+    llm_model: str | None = None
+    api_key: str | None = None
+
+
 class ChatbotResponse(BaseModel):
     id: UUID
     name: str
