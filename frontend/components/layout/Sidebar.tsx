@@ -14,7 +14,7 @@ const navigation = [
   },
   {
     name: "Create Chatbot",
-    href: "/create",
+    href: "/chatbots/create",
     icon: PlusCircle,
   },
   {
