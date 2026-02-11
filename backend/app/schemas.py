@@ -60,3 +60,6 @@ class ChatbotResponse(BaseModel):
 class ChatbotListResponse(BaseModel):
     chatbots: list[ChatbotResponse]
     total: int
+
+class ChatbotDetailResponse(ChatbotResponse):
+    document_ids: list[str] = []

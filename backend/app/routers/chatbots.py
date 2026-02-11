@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Chatbot, Document, User
-from app.schemas import ChatbotCreate, ChatbotUpdate, ChatbotResponse, ChatbotListResponse
+from app.schemas import ChatbotCreate, ChatbotUpdate, ChatbotResponse, ChatbotDetailResponse, ChatbotListResponse
 from app.auth import get_current_user
 
 router = APIRouter(prefix="/chatbots", tags=["chatbots"])
@@ -23,6 +23,21 @@ def chatbot_to_response(chatbot: Chatbot) -> ChatbotResponse:
         public_token=chatbot.public_token,
         created_at=chatbot.created_at,
         document_count=len(chatbot.documents),
+    )
+
+
+def chatbot_to_detail_response(chatbot: Chatbot) -> ChatbotDetailResponse:
+    return ChatbotDetailResponse(
+        id=chatbot.id,
+        name=chatbot.name,
+        description=chatbot.description,
+        llm_provider=chatbot.llm_provider,
+        llm_model=chatbot.llm_model,
+        is_public=chatbot.is_public,
+        public_token=chatbot.public_token,
+        created_at=chatbot.created_at,
+        document_count=len(chatbot.documents),
+        document_ids=[str(doc.id) for doc in chatbot.documents],
     )
 
 
@@ -78,8 +93,8 @@ def list_chatbots(
     )
 
 
-# Get a single chatbot by ID
-@router.get("/{chatbot_id}", response_model=ChatbotResponse)
+# Get a single chatbot by ID (includes document_ids)
+@router.get("/{chatbot_id}", response_model=ChatbotDetailResponse)
 def get_chatbot(
     chatbot_id: UUID,
     db: Session = Depends(get_db),
@@ -93,7 +108,7 @@ def get_chatbot(
     if not chatbot:
         raise HTTPException(404, "Chatbot not found")
     
-    return chatbot_to_response(chatbot)
+    return chatbot_to_detail_response(chatbot)
 
 
 # Update chatbot fields and/or document assignments

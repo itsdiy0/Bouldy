@@ -48,6 +48,10 @@ export interface CreateChatbotData {
   api_key?: string;
 }
 
+export interface ChatbotDetail extends Chatbot {
+  document_ids: string[];
+}
+
 // Auth helper
 async function getAuthHeaders(): Promise<HeadersInit> {
   const session = await getSession();
