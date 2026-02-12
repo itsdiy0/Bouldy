@@ -1,13 +1,17 @@
+import logging
 import secrets
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Chatbot, Document, User
 from app.schemas import ChatbotCreate, ChatbotUpdate, ChatbotResponse, ChatbotDetailResponse, ChatbotListResponse
 from app.auth import get_current_user
+from app.services.indexing import index_chatbot_documents, delete_chatbot_index
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chatbots", tags=["chatbots"])
 
@@ -45,6 +49,7 @@ def chatbot_to_detail_response(chatbot: Chatbot) -> ChatbotDetailResponse:
 @router.post("", response_model=ChatbotResponse)
 def create_chatbot(
     data: ChatbotCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -73,6 +78,11 @@ def create_chatbot(
     db.add(chatbot)
     db.commit()
     db.refresh(chatbot)
+
+    # Trigger indexing in background if documents were assigned
+    if docs:
+        background_tasks.add_task(index_chatbot_documents, chatbot.id, docs)
+        logger.info(f"Queued indexing for chatbot {chatbot.id} with {len(docs)} docs")
     
     return chatbot_to_response(chatbot)
 
@@ -116,6 +126,7 @@ def get_chatbot(
 def update_chatbot(
     chatbot_id: UUID,
     data: ChatbotUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -136,6 +147,7 @@ def update_chatbot(
     if data.llm_model is not None:
         chatbot.llm_model = data.llm_model
     
+    needs_reindex = False
     if data.document_ids is not None:
         docs = db.query(Document).filter(
             Document.id.in_(data.document_ids),
@@ -145,10 +157,24 @@ def update_chatbot(
         if len(docs) != len(data.document_ids):
             raise HTTPException(400, "One or more documents not found")
         
-        chatbot.documents = docs
+        # Check if documents actually changed
+        old_ids = {str(d.id) for d in chatbot.documents}
+        new_ids = {str(d) for d in data.document_ids}
+        if old_ids != new_ids:
+            chatbot.documents = docs
+            needs_reindex = True
     
     db.commit()
     db.refresh(chatbot)
+
+    # Re-index if documents changed
+    if needs_reindex:
+        if chatbot.documents:
+            background_tasks.add_task(index_chatbot_documents, chatbot.id, chatbot.documents)
+            logger.info(f"Queued re-indexing for chatbot {chatbot.id}")
+        else:
+            background_tasks.add_task(delete_chatbot_index, chatbot.id)
+            logger.info(f"Queued index deletion for chatbot {chatbot.id} (no docs)")
     
     return chatbot_to_response(chatbot)
 
@@ -157,6 +183,7 @@ def update_chatbot(
 @router.delete("/{chatbot_id}")
 def delete_chatbot(
     chatbot_id: UUID,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -167,6 +194,9 @@ def delete_chatbot(
     
     if not chatbot:
         raise HTTPException(404, "Chatbot not found")
+    
+    # Clean up Qdrant collection in background
+    background_tasks.add_task(delete_chatbot_index, chatbot_id)
     
     db.delete(chatbot)
     db.commit()
