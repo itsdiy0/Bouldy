@@ -35,6 +35,49 @@ class ChatResponse(BaseModel):
     sources: list[dict] = []
 
 
+# Minimum relevance score to include a source
+RELEVANCE_THRESHOLD = 0.25
+
+
+def trim_to_sentences(text: str, max_length: int = 300) -> str:
+    """Trim text to complete sentences within max_length."""
+    if len(text) <= max_length:
+        return text.strip()
+    
+    # Find the last sentence boundary before max_length
+    truncated = text[:max_length]
+    last_period = truncated.rfind(".")
+    last_question = truncated.rfind("?")
+    last_exclaim = truncated.rfind("!")
+    
+    boundary = max(last_period, last_question, last_exclaim)
+    
+    if boundary > 50:  # only trim if we keep a reasonable amount
+        return truncated[:boundary + 1].strip()
+    return truncated.strip() + "..."
+
+
+def extract_sources(source_nodes: list) -> list[dict]:
+    """Extract and filter citation sources from query response."""
+    sources = []
+    for node in source_nodes:
+        score = node.score if node.score else 0
+
+        # Filter out low-relevance chunks
+        if score < RELEVANCE_THRESHOLD:
+            continue
+
+        sources.append({
+            "text": trim_to_sentences(node.text),
+            "score": round(score, 3),
+            "filename": node.metadata.get("filename", "Unknown"),
+            "document_id": node.metadata.get("document_id"),
+            "page": node.metadata.get("page"),
+        })
+
+    return sources
+
+
 def load_chatbot_index(chatbot_id: UUID) -> VectorStoreIndex:
     """Load an existing Qdrant index for a chatbot."""
     client = get_qdrant_client()
@@ -91,15 +134,8 @@ def chat(
     )
     response = query_engine.query(req.message)
 
-    # 5. Extract sources
-    sources = []
-    for node in response.source_nodes:
-        sources.append({
-            "text": node.text[:300],
-            "score": round(node.score, 3) if node.score else None,
-            "filename": node.metadata.get("filename", "Unknown"),
-            "document_id": node.metadata.get("document_id"),
-        })
+    # 5. Extract and filter sources
+    sources = extract_sources(response.source_nodes)
 
     return ChatResponse(response=str(response), sources=sources)
 
@@ -148,14 +184,7 @@ def chat_stream(
 
         # After streaming, send sources as a final JSON chunk
         import json
-        sources = []
-        for node in streaming_response.source_nodes:
-            sources.append({
-                "text": node.text[:300],
-                "score": round(node.score, 3) if node.score else None,
-                "filename": node.metadata.get("filename", "Unknown"),
-                "document_id": node.metadata.get("document_id"),
-            })
+        sources = extract_sources(streaming_response.source_nodes)
         yield f"\n\n__SOURCES__{json.dumps(sources)}"
 
     return StreamingResponse(generate(), media_type="text/plain")

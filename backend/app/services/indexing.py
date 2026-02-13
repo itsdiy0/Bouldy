@@ -1,6 +1,6 @@
 """
-Document processing pipeline 
-download from MinIO → parse → chunk → embed → store in Qdrant
+Document processing pipeline for Bouldy.
+Handles: download from MinIO → parse → chunk → embed → store in Qdrant
 """
 import io
 import logging
@@ -28,48 +28,32 @@ def get_embed_model() -> OpenAIEmbedding:
         api_key=settings.openai_embedding_key,
     )
 
+
 def get_collection_name(chatbot_id: UUID) -> str:
     """Each chatbot gets its own Qdrant collection."""
     return f"chatbot_{str(chatbot_id)}"
 
-
-# File Parsers 
-
-def parse_pdf(content: bytes) -> str:
-    """Extract text from PDF bytes."""
+def parse_pdf_pages(content: bytes) -> list[dict]:
+    """Extract text from PDF bytes, per page. Returns list of {text, page}."""
     from pypdf import PdfReader
     reader = PdfReader(io.BytesIO(content))
-    text = ""
-    for page in reader.pages:
+    pages = []
+    for i, page in enumerate(reader.pages):
         page_text = page.extract_text()
-        if page_text:
-            text += page_text + "\n"
-    return text
+        if page_text and page_text.strip():
+            pages.append({"text": page_text, "page": i + 1})
+    return pages
+
 
 def parse_docx(content: bytes) -> str:
     """Extract text from DOCX bytes."""
     import docx2txt
     return docx2txt.process(io.BytesIO(content))
 
+
 def parse_txt(content: bytes) -> str:
     """Extract text from TXT bytes."""
     return content.decode("utf-8", errors="ignore")
-
-PARSERS = {
-    "pdf": parse_pdf,
-    "docx": parse_docx,
-    "txt": parse_txt,
-}
-
-def parse_document(content: bytes, file_type: str) -> str:
-    """Parse document bytes into plain text based on file type."""
-    parser = PARSERS.get(file_type)
-    if not parser:
-        raise ValueError(f"Unsupported file type: {file_type}")
-    return parser(content)
-
-
-# Core Pipeline
 
 def index_chatbot_documents(
     chatbot_id: UUID,
@@ -83,32 +67,57 @@ def index_chatbot_documents(
     """
     collection_name = get_collection_name(chatbot_id)
     client = get_qdrant_client()
+
     # 1. Delete existing collection if it exists (clean rebuild)
     try:
         client.delete_collection(collection_name)
         logger.info(f"Deleted existing collection: {collection_name}")
     except UnexpectedResponse:
         pass  # Collection didn't exist, that's fine
+
     # 2. Download and parse all documents into LlamaIndex Documents
     li_documents = []
     for doc in documents:
         try:
             content = get_file(doc.s3_key)
-            text = parse_document(content, doc.file_type)
+            base_metadata = {
+                "document_id": str(doc.id),
+                "filename": doc.original_filename,
+                "file_type": doc.file_type,
+            }
 
-            if not text.strip():
-                logger.warning(f"Document {doc.id} ({doc.original_filename}) produced no text, skipping")
+            if doc.file_type == "pdf":
+                # PDF: one LlamaIndex doc per page (preserves page numbers)
+                pages = parse_pdf_pages(content)
+                for page_data in pages:
+                    li_documents.append(LIDocument(
+                        text=page_data["text"],
+                        metadata={**base_metadata, "page": page_data["page"]},
+                    ))
+                logger.info(f"Parsed PDF: {doc.original_filename} ({len(pages)} pages)")
+
+            elif doc.file_type == "docx":
+                text = parse_docx(content)
+                if text.strip():
+                    li_documents.append(LIDocument(
+                        text=text,
+                        metadata={**base_metadata, "page": None},
+                    ))
+                    logger.info(f"Parsed DOCX: {doc.original_filename} ({len(text)} chars)")
+
+            elif doc.file_type == "txt":
+                text = parse_txt(content)
+                if text.strip():
+                    li_documents.append(LIDocument(
+                        text=text,
+                        metadata={**base_metadata, "page": None},
+                    ))
+                    logger.info(f"Parsed TXT: {doc.original_filename} ({len(text)} chars)")
+
+            else:
+                logger.warning(f"Unsupported file type: {doc.file_type}")
                 continue
 
-            li_documents.append(LIDocument(
-                text=text,
-                metadata={
-                    "document_id": str(doc.id),
-                    "filename": doc.original_filename,
-                    "file_type": doc.file_type,
-                },
-            ))
-            logger.info(f"Parsed: {doc.original_filename} ({len(text)} chars)")
         except Exception as e:
             logger.error(f"Failed to parse document {doc.id}: {e}")
             continue
@@ -116,22 +125,27 @@ def index_chatbot_documents(
     if not li_documents:
         logger.warning(f"No documents to index for chatbot {chatbot_id}")
         return 0
+
     # 3. Configure embedding model
     LISettings.embed_model = get_embed_model()
+
     # 4. Set up chunking
     splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
+
     # 5. Set up Qdrant vector store
     vector_store = QdrantVectorStore(
         client=client,
         collection_name=collection_name,
     )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    # 6. Build index 
+
+    # 6. Build index (this chunks, embeds, and stores in one go)
     index = VectorStoreIndex.from_documents(
         li_documents,
         storage_context=storage_context,
         transformations=[splitter],
     )
+
     # 7. Get chunk count
     chunk_count = len(index.docstore.docs)
     logger.info(f"Indexed {chunk_count} chunks for chatbot {chatbot_id}")
