@@ -70,6 +70,7 @@ def create_chatbot(
         description=data.description,
         llm_provider=data.llm_provider,
         llm_model=data.llm_model,
+        llm_api_key=data.api_key,
         public_token=secrets.token_urlsafe(32),
     )
     
@@ -146,6 +147,8 @@ def update_chatbot(
         chatbot.llm_provider = data.llm_provider
     if data.llm_model is not None:
         chatbot.llm_model = data.llm_model
+    if data.api_key is not None:
+        chatbot.llm_api_key = data.api_key
     
     needs_reindex = False
     if data.document_ids is not None:

@@ -63,6 +63,7 @@ class Chatbot(Base):
     # LLM provider config (encrypted in production)
     llm_provider = Column(String(50))  # openai, anthropic, ollama, groq
     llm_model = Column(String(100))
+    llm_api_key = Column(Text)
     
     # Public access
     public_token = Column(String(64), unique=True, index=True)
