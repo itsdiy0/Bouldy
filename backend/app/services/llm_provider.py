@@ -5,7 +5,7 @@ Returns the correct LlamaIndex LLM based on chatbot config.
 from llama_index.core.llms import LLM
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.anthropic import Anthropic
-
+from llama_index.llms.google_genai import GoogleGenAI
 
 def get_llm(provider: str, model: str, api_key: str | None = None) -> LLM:
     """
@@ -34,12 +34,11 @@ def get_llm(provider: str, model: str, api_key: str | None = None) -> LLM:
     elif provider == "gemini":
         if not api_key:
             raise ValueError("Google Gemini requires an API key")
-        # Gemini supports OpenAI-compatible API
-        return OpenAI(
-            model=model,
+        return GoogleGenAI(
+            model=f"models/{model}",
             api_key=api_key,
-            api_base="https://generativelanguage.googleapis.com/v1beta/openai",
         )
+        
 
     elif provider == "grok":
         if not api_key:

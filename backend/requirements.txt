@@ -33,6 +33,7 @@ filetype==1.2.0
 frozenlist==1.8.0
 fsspec==2026.2.0
 google-auth==2.48.0
+google-genai==1.63.0
 greenlet==3.3.1
 griffe==2.0.0
 griffecli==2.0.0
@@ -59,6 +60,7 @@ llama-index-embeddings-openai==0.5.1
 llama-index-indices-managed-llama-cloud==0.9.4
 llama-index-instrumentation==0.4.2
 llama-index-llms-anthropic==0.10.8
+llama-index-llms-google-genai==0.8.7
 llama-index-llms-openai==0.6.18
 llama-index-readers-file==0.5.6
 llama-index-readers-llama-parse==0.5.1
@@ -120,6 +122,6 @@ urllib3==2.6.3
 uvicorn==0.30.6
 uvloop==0.22.1
 watchfiles==1.1.1
-websockets==16.0
+websockets==15.0.1
 wrapt==1.17.3
 yarl==1.22.0

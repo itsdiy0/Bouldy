@@ -17,7 +17,7 @@ const STEPS = [
 const LLM_PROVIDERS = [
   { id: "openai", name: "OpenAI", models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"], color: "#10a37f", bg: "#10a37f20" },
   { id: "anthropic", name: "Anthropic", models: ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"], color: "#d4a574", bg: "#d4a57420" },
-  { id: "gemini", name: "Google Gemini", models: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"], color: "#8E75B2", bg: "#8E75B220" },
+  { id: "gemini", name: "Google Gemini", models: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"], color: "#8E75B2", bg: "#8E75B220" },
   { id: "ollama", name: "Ollama", models: ["llama3", "llama2", "mistral", "codellama"], color: "#ffffff", bg: "#ffffff15" },
   { id: "grok", name: "Grok (xAI)", models: ["grok-2", "grok-2-mini", "grok-beta"], color: "#000000", bg: "#ffffff15" },
 ];
