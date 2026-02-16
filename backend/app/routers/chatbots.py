@@ -27,6 +27,7 @@ def chatbot_to_response(chatbot: Chatbot) -> ChatbotResponse:
         public_token=chatbot.public_token,
         created_at=chatbot.created_at,
         document_count=len(chatbot.documents),
+        memory_enabled=chatbot.memory_enabled or "false",
     )
 
 
@@ -42,6 +43,7 @@ def chatbot_to_detail_response(chatbot: Chatbot) -> ChatbotDetailResponse:
         created_at=chatbot.created_at,
         document_count=len(chatbot.documents),
         document_ids=[str(doc.id) for doc in chatbot.documents],
+        memory_enabled=chatbot.memory_enabled or "false",
     )
 
 
@@ -149,7 +151,9 @@ def update_chatbot(
         chatbot.llm_model = data.llm_model
     if data.api_key is not None:
         chatbot.llm_api_key = data.api_key
-    
+    if data.memory_enabled is not None:
+        chatbot.memory_enabled = data.memory_enabled
+
     needs_reindex = False
     if data.document_ids is not None:
         docs = db.query(Document).filter(

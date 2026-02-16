@@ -40,6 +40,7 @@ class ChatbotUpdate(BaseModel):
     llm_provider: str | None = None
     llm_model: str | None = None
     api_key: str | None = None
+    memory_enabled: str | None = None
 
 
 class ChatbotResponse(BaseModel):
@@ -52,7 +53,8 @@ class ChatbotResponse(BaseModel):
     public_token: str | None
     created_at: datetime
     document_count: int = 0
-
+    memory_enabled: str = "false"
+    
     class Config:
         from_attributes = True
 
@@ -62,7 +64,8 @@ class ChatbotListResponse(BaseModel):
     total: int
 
 class ChatbotDetailResponse(ChatbotResponse):
-    document_ids: list[str] = []
+    document_ids: list[str] = []    
+    memory_enabled: str = "false"
 
 class ChatMessageResponse(BaseModel):
     id: UUID

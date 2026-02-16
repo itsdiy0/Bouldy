@@ -4,16 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProviderIcon from "@/components/ui/ProviderIcon";
-import { Save, Check, File, Search, Loader2, ChevronLeft } from "lucide-react";
-import { getChatbot, updateChatbot, getDocuments, ChatbotDetail, Document } from "@/lib/api";
-
-const LLM_PROVIDERS = [
-  { id: "openai", name: "OpenAI", models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"], color: "#10a37f", bg: "#10a37f20" },
-  { id: "anthropic", name: "Anthropic", models: ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"], color: "#d4a574", bg: "#d4a57420" },
-  { id: "gemini", name: "Google Gemini", models: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"], color: "#8E75B2", bg: "#8E75B220" },
-  { id: "ollama", name: "Ollama", models: ["llama3", "llama2", "mistral", "codellama"], color: "#ffffff", bg: "#ffffff15" },
-  { id: "grok", name: "Grok (xAI)", models: ["grok-2", "grok-2-mini", "grok-beta"], color: "#000000", bg: "#ffffff15" },
-];
+import { Save, Check, File, Search, Loader2, ChevronLeft, Trash2 } from "lucide-react";
+import { getChatbot, updateChatbot, deleteChatbot, getDocuments, ChatbotDetail, Document } from "@/lib/api";
+import { LLM_PROVIDERS } from "@/lib/llm_providers";
 
 const fileTypeColors: Record<string, string> = { pdf: "#ef4444", docx: "#3b82f6", txt: "#9ca3af" };
 
@@ -26,12 +19,15 @@ export default function ChatbotSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [provider, setProvider] = useState("");
   const [model, setModel] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [memoryEnabled, setMemoryEnabled] = useState(false);
 
   const [allDocs, setAllDocs] = useState<Document[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
@@ -50,9 +46,9 @@ export default function ChatbotSettingsPage() {
         setDescription(chatbot.description || "");
         setProvider(chatbot.llm_provider || "");
         setModel(chatbot.llm_model || "");
+        setMemoryEnabled(chatbot.memory_enabled === "true");
         setAllDocs(docsRes.documents);
 
-        // Pre-select documents that belong to this chatbot
         if (chatbot.document_ids && chatbot.document_ids.length > 0) {
           setSelectedDocIds(new Set(chatbot.document_ids));
         }
@@ -86,6 +82,7 @@ export default function ChatbotSettingsPage() {
         llm_provider: provider || undefined,
         llm_model: model || undefined,
         api_key: apiKey || undefined,
+        memory_enabled: memoryEnabled ? "true" : "false",
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -93,6 +90,18 @@ export default function ChatbotSettingsPage() {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteChatbot(chatbotId);
+      router.push("/chatbots");
+    } catch {
+      setError("Failed to delete chatbot");
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -135,25 +144,35 @@ export default function ChatbotSettingsPage() {
               <span style={{ color: "#715A5A" }}>/</span>
               <h1 className="text-lg font-bold" style={{ color: "#D3DAD9" }}>{name}</h1>
             </div>
-            <button
-              onClick={handleSave}
-              disabled={saving || !name.trim()}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
-              style={{
-                backgroundColor: saved ? "#10a37f" : "#715A5A",
-                color: "#D3DAD9",
-                opacity: saving || !name.trim() ? 0.5 : 1,
-              }}
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : saved ? (
-                <Check className="w-4 h-4" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {saving ? "Saving..." : saved ? "Saved" : "Save Changes"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
+                style={{ backgroundColor: "#ef4444", color: "#ffffff" }}
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !name.trim()}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
+                style={{
+                  backgroundColor: saved ? "#10a37f" : "#715A5A",
+                  color: "#D3DAD9",
+                  opacity: saving || !name.trim() ? 0.5 : 1,
+                }}
+              >
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : saved ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {saving ? "Saving..." : saved ? "Saved" : "Save Changes"}
+              </button>
+            </div>
           </div>
 
           {/* Error */}
@@ -244,7 +263,7 @@ export default function ChatbotSettingsPage() {
                       <p className="text-sm mb-4" style={{ color: "#D3DAD9", opacity: 0.5 }}>No documents uploaded yet</p>
                       <button
                         onClick={() => router.push("/documents")}
-                        className="px-4 py-2 rounded-lg text-sm"
+                        className="px-4 py-2 rounded-lg text-sm cursor-pointer"
                         style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
                       >
                         Upload Documents
@@ -334,12 +353,74 @@ export default function ChatbotSettingsPage() {
                       />
                     </div>
                   )}
+
+                  {/* Memory Toggle */}
+                  <div
+                    className="flex items-center justify-between px-4 py-4 rounded-lg"
+                    style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
+                  >
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "#D3DAD9" }}>Conversation Memory</p>
+                      <p className="text-xs mt-0.5" style={{ color: "#D3DAD9", opacity: 0.4 }}>
+                        Include previous messages as context for follow-up questions
+                      </p>
+                      {memoryEnabled && (
+                        <p className="text-[11px] mt-1.5" style={{ color: "#d4a574", opacity: 0.7 }}>
+                          ⚠ Sends last 10 messages with each request — increases token usage
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setMemoryEnabled(!memoryEnabled)}
+                      className="w-11 h-6 rounded-full transition-all cursor-pointer flex-shrink-0 relative"
+                      style={{ backgroundColor: memoryEnabled ? "#715A5A" : "#2D2B33" }}
+                    >
+                      <div
+                        className="w-4.5 h-4.5 rounded-full absolute top-[3px] transition-all"
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          backgroundColor: memoryEnabled ? "#D3DAD9" : "#715A5A",
+                          left: memoryEnabled ? "22px" : "3px",
+                        }}
+                      />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "#00000080" }}>
+          <div className="rounded-xl p-6 max-w-sm w-full mx-4" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A" }}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: "#D3DAD9" }}>Delete Chatbot</h3>
+            <p className="text-sm mb-6" style={{ color: "#D3DAD9", opacity: 0.6 }}>
+              Are you sure? This will permanently delete <strong>{name}</strong>, all its chat sessions, and its vector index. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+                style={{ backgroundColor: "transparent", color: "#D3DAD9", border: "1px solid #715A5A" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+                style={{ backgroundColor: "#ef4444", color: "#ffffff", opacity: deleting ? 0.6 : 1 }}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

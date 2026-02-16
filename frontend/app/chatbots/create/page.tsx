@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Check, File, Bot, Settings, Sparkles,BotIcon, Search } from "lucide-react";
+import { Check, File, Bot, Settings, Sparkles, BotIcon, Search } from "lucide-react";
 import ProviderIcon from "@/components/ui/ProviderIcon";
 import { getDocuments, createChatbot, Document, CreateChatbotData } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
@@ -31,6 +31,7 @@ export default function CreateChatbotPage() {
   const [provider, setProvider] = useState("");
   const [model, setModel] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [memoryEnabled, setMemoryEnabled] = useState(false);
 
   useEffect(() => {
     async function fetchDocs() {
@@ -88,6 +89,7 @@ export default function CreateChatbotPage() {
         llm_provider: provider,
         llm_model: model,
         api_key: apiKey || undefined,
+        memory_enabled: memoryEnabled ? "true" : "false",
       };
       await createChatbot(data);
       router.push("/chatbots");
@@ -140,7 +142,7 @@ export default function CreateChatbotPage() {
             </div>
           </div>
 
-          {/* Error Message */}
+          {/* Error */}
           {error && (
             <div className="p-3 rounded-lg mb-4 text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
               {error}
@@ -202,7 +204,7 @@ export default function CreateChatbotPage() {
                   <div className="text-center py-12">
                     <File className="w-12 h-12 mx-auto mb-3" style={{ color: "#D3DAD9", opacity: 0.3 }} />
                     <p className="text-sm" style={{ color: "#D3DAD9", opacity: 0.6 }}>No documents uploaded</p>
-                    <button onClick={() => router.push("/documents")} className="mt-3 px-4 py-2 rounded-lg text-sm" style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}>
+                    <button onClick={() => router.push("/documents")} className="mt-3 px-4 py-2 rounded-lg text-sm cursor-pointer" style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}>
                       Upload Documents
                     </button>
                   </div>
@@ -246,7 +248,7 @@ export default function CreateChatbotPage() {
                       <button
                         key={p.id}
                         onClick={() => { setProvider(p.id); setModel(""); }}
-                        className="px-4 py-3 rounded-lg text-left transition-all flex items-center gap-3"
+                        className="px-4 py-3 rounded-lg text-left transition-all flex items-center gap-3 cursor-pointer"
                         style={{
                           backgroundColor: provider === p.id ? p.bg : "#37353E",
                           border: provider === p.id ? `2px solid ${p.color}` : "2px solid transparent",
@@ -287,6 +289,39 @@ export default function CreateChatbotPage() {
                     />
                   </div>
                 )}
+
+                {/* Memory Toggle */}
+                <div
+                  className="flex items-center justify-between px-4 py-4 rounded-lg"
+                  style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
+                >
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: "#D3DAD9" }}>Conversation Memory</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#D3DAD9", opacity: 0.4 }}>
+                      Include previous messages as context for follow-up questions
+                    </p>
+                    {memoryEnabled && (
+                      <p className="text-[11px] mt-1.5" style={{ color: "#d4a574", opacity: 0.7 }}>
+                        ⚠ Sends last 10 messages with each request — increases token usage
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setMemoryEnabled(!memoryEnabled)}
+                    className="w-11 h-6 rounded-full transition-all cursor-pointer flex-shrink-0 relative"
+                    style={{ backgroundColor: memoryEnabled ? "#715A5A" : "#2D2B33" }}
+                  >
+                    <div
+                      className="rounded-full absolute top-[3px] transition-all"
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        backgroundColor: memoryEnabled ? "#D3DAD9" : "#715A5A",
+                        left: memoryEnabled ? "22px" : "3px",
+                      }}
+                    />
+                  </button>
+                </div>
               </div>
             )}
 
@@ -300,6 +335,7 @@ export default function CreateChatbotPage() {
                   { label: "Provider", value: LLM_PROVIDERS.find((p) => p.id === provider)?.name },
                   { label: "Model", value: model },
                   { label: "API Key", value: apiKey ? "••••••••" : "—" },
+                  { label: "Memory", value: memoryEnabled ? "Enabled" : "Disabled" },
                 ].map((row, i, arr) => (
                   <div
                     key={row.label}
@@ -325,7 +361,7 @@ export default function CreateChatbotPage() {
                 border: "1px solid #715A5A",
                 opacity: currentStep === 1 ? 0 : 1,
                 pointerEvents: currentStep === 1 ? "none" : "auto",
-                cursor:"pointer"
+                cursor: "pointer",
               }}
             >
               Back
@@ -339,7 +375,7 @@ export default function CreateChatbotPage() {
                   backgroundColor: isStepComplete(currentStep) ? "#715A5A" : "#715A5A60",
                   color: "#D3DAD9",
                   opacity: isStepComplete(currentStep) ? 1 : 0.5,
-                  cursor:"pointer"
+                  cursor: "pointer",
                 }}
               >
                 Next
@@ -353,7 +389,7 @@ export default function CreateChatbotPage() {
                   backgroundColor: "#715A5A",
                   color: "#D3DAD9",
                   opacity: isLoading ? 0.6 : 1,
-                  cursor:"pointer"
+                  cursor: "pointer",
                 }}
               >
                 {isLoading ? "Creating..." : "Create Chatbot"}
