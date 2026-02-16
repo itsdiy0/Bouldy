@@ -64,7 +64,9 @@ class Chatbot(Base):
     llm_provider = Column(String(50))  # openai, anthropic, ollama, groq
     llm_model = Column(String(100))
     llm_api_key = Column(Text)
-    
+    # toggle for whether chatbot retains conversation history (context window) or treats each message as stateless
+    memory_enabled = Column(String(10), default="false") 
+
     # Public access
     public_token = Column(String(64), unique=True, index=True)
     is_public = Column(String(10), default="false")
@@ -74,3 +76,35 @@ class Chatbot(Base):
 
     user = relationship("User", back_populates="chatbots")
     documents = relationship("Document", secondary=chatbot_documents, back_populates="chatbots")
+
+
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chatbot_id = Column(UUID(as_uuid=True), ForeignKey("chatbots.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    
+    title = Column(String(255), default="New Chat")
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    chatbot = relationship("Chatbot", backref="sessions")
+    user = relationship("User", backref="chat_sessions")
+    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan", order_by="ChatMessage.created_at")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.id", ondelete="CASCADE"), nullable=False)
+    
+    role = Column(String(20), nullable=False)  # "user" or "assistant"
+    content = Column(Text, nullable=False)
+    sources = Column(Text)  # JSON string of citation data
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    session = relationship("ChatSession", back_populates="messages")

@@ -63,3 +63,38 @@ class ChatbotListResponse(BaseModel):
 
 class ChatbotDetailResponse(ChatbotResponse):
     document_ids: list[str] = []
+
+class ChatMessageResponse(BaseModel):
+    id: UUID
+    role: str
+    content: str
+    sources: str | None = None  # JSON string
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ChatSessionResponse(BaseModel):
+    id: UUID
+    chatbot_id: UUID
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    message_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class ChatSessionDetailResponse(ChatSessionResponse):
+    messages: list[ChatMessageResponse] = []
+
+
+class ChatSessionListResponse(BaseModel):
+    sessions: list[ChatSessionResponse]
+    total: int
+
+
+class ChatSessionUpdate(BaseModel):
+    title: str | None = None
