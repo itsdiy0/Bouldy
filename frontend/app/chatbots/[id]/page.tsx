@@ -356,7 +356,7 @@ export default function ChatbotPage() {
                 Export
               </button>
               <button
-                onClick={() => router.push(`/chatbots/${chatbotId}/settings`)}
+                onClick={() => router.push(`/chatbots/${chatbotId}/settings?from=chat`)}
                 className="p-1.5 rounded-lg cursor-pointer transition-all hover:brightness-110"
                 style={{ backgroundColor: secondary }}
               >

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProviderIcon from "@/components/ui/ProviderIcon";
 import BrandingPicker from "@/components/ui/BrandingPicker";
@@ -15,7 +15,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function ChatbotSettingsPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const chatbotId = params.id as string;
+  const fromChat = searchParams.get("from") === "chat";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -158,12 +160,12 @@ export default function ChatbotSettingsPage() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => router.push("/chatbots")}
+                onClick={() => router.push(fromChat ? `/chatbots/${chatbotId}` : "/chatbots")}
                 className="flex items-center gap-1 text-sm transition-all rounded-lg px-2 py-1.5 cursor-pointer hover:opacity-100"
                 style={{ color: "#D3DAD9", opacity: 0.5 }}
               >
                 <ChevronLeft className="w-4 h-4" />
-                Chatbots
+                {fromChat ? "Back to Chat" : "Chatbots"}
               </button>
               <span style={{ color: "#715A5A" }}>/</span>
               <h1 className="text-lg font-bold" style={{ color: "#D3DAD9" }}>{name}</h1>
