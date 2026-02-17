@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProviderIcon from "@/components/ui/ProviderIcon";
+import BrandingPicker from "@/components/ui/BrandingPicker";
 import { Save, Check, File, Search, Loader2, ChevronLeft, Trash2 } from "lucide-react";
-import { getChatbot, updateChatbot, deleteChatbot, getDocuments, ChatbotDetail, Document } from "@/lib/api";
+import { getChatbot, updateChatbot, deleteChatbot, uploadAvatar, getDocuments, ChatbotDetail, Document } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
 
 const fileTypeColors: Record<string, string> = { pdf: "#ef4444", docx: "#3b82f6", txt: "#9ca3af" };
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function ChatbotSettingsPage() {
   const router = useRouter();
@@ -28,6 +30,10 @@ export default function ChatbotSettingsPage() {
   const [model, setModel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [memoryEnabled, setMemoryEnabled] = useState(false);
+  const [accentPrimary, setAccentPrimary] = useState("#715A5A");
+  const [accentSecondary, setAccentSecondary] = useState("#2D2B33");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const [allDocs, setAllDocs] = useState<Document[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
@@ -47,6 +53,11 @@ export default function ChatbotSettingsPage() {
         setProvider(chatbot.llm_provider || "");
         setModel(chatbot.llm_model || "");
         setMemoryEnabled(chatbot.memory_enabled === "true");
+        setAccentPrimary(chatbot.accent_primary || "#715A5A");
+        setAccentSecondary(chatbot.accent_secondary || "#2D2B33");
+        if (chatbot.avatar_url) {
+          setAvatarPreview(`${API_URL}/api/chatbots/${chatbotId}/avatar?t=${Date.now()}`);
+        }
         setAllDocs(docsRes.documents);
 
         if (chatbot.document_ids && chatbot.document_ids.length > 0) {
@@ -83,7 +94,20 @@ export default function ChatbotSettingsPage() {
         llm_model: model || undefined,
         api_key: apiKey || undefined,
         memory_enabled: memoryEnabled ? "true" : "false",
+        accent_primary: accentPrimary,
+        accent_secondary: accentSecondary,
       });
+
+      // Upload avatar if changed
+      if (avatarFile) {
+        try {
+          await uploadAvatar(chatbotId, avatarFile);
+          setAvatarFile(null);
+        } catch {
+          setError("Saved settings but avatar upload failed");
+        }
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -232,6 +256,13 @@ export default function ChatbotSettingsPage() {
                       style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
                     />
                   </div>
+                  <BrandingPicker
+                    primary={accentPrimary}
+                    secondary={accentSecondary}
+                    avatarPreview={avatarPreview}
+                    onColorChange={(p, s) => { setAccentPrimary(p); setAccentSecondary(s); }}
+                    onAvatarChange={(file, preview) => { setAvatarFile(file); setAvatarPreview(preview); }}
+                  />
                 </div>
               )}
 
@@ -376,7 +407,7 @@ export default function ChatbotSettingsPage() {
                       style={{ backgroundColor: memoryEnabled ? "#715A5A" : "#2D2B33" }}
                     >
                       <div
-                        className="w-4.5 h-4.5 rounded-full absolute top-[3px] transition-all"
+                        className="rounded-full absolute top-[3px] transition-all"
                         style={{
                           width: "18px",
                           height: "18px",

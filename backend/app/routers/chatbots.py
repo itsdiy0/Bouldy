@@ -11,6 +11,8 @@ from app.schemas import ChatbotCreate, ChatbotUpdate, ChatbotResponse, ChatbotDe
 from app.auth import get_current_user
 from app.services.indexing import index_chatbot_documents, delete_chatbot_index
 from app.storage import upload_file
+from fastapi.responses import Response
+from app.storage import get_file as get_s3_file
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,9 @@ def chatbot_to_response(chatbot: Chatbot) -> ChatbotResponse:
         created_at=chatbot.created_at,
         document_count=len(chatbot.documents),
         memory_enabled=chatbot.memory_enabled or "false",
+        accent_primary=chatbot.accent_primary or "#715A5A",
+        accent_secondary=chatbot.accent_secondary or "#2D2B33",
+        avatar_url=chatbot.avatar_url,
     )
 
 
@@ -45,6 +50,9 @@ def chatbot_to_detail_response(chatbot: Chatbot) -> ChatbotDetailResponse:
         document_count=len(chatbot.documents),
         document_ids=[str(doc.id) for doc in chatbot.documents],
         memory_enabled=chatbot.memory_enabled or "false",
+        accent_primary=chatbot.accent_primary or "#715A5A",
+        accent_secondary=chatbot.accent_secondary or "#2D2B33",
+        avatar_url=chatbot.avatar_url,
     )
 
 
@@ -156,6 +164,10 @@ def update_chatbot(
         chatbot.llm_api_key = data.api_key
     if data.memory_enabled is not None:
         chatbot.memory_enabled = data.memory_enabled
+    if data.accent_primary is not None:
+        chatbot.accent_primary = data.accent_primary
+    if data.accent_secondary is not None:
+        chatbot.accent_secondary = data.accent_secondary
 
     needs_reindex = False
     if data.document_ids is not None:
@@ -238,3 +250,15 @@ async def upload_avatar(
     db.commit()
     
     return {"avatar_url": s3_key}
+
+@router.get("/{chatbot_id}/avatar")
+def get_avatar(
+    chatbot_id: UUID,
+    db: Session = Depends(get_db),
+):
+    chatbot = db.query(Chatbot).filter(Chatbot.id == chatbot_id).first()
+    if not chatbot or not chatbot.avatar_url:
+        raise HTTPException(404, "No avatar found")
+    
+    content = get_s3_file(chatbot.avatar_url)
+    return Response(content=content, media_type="image/png")
