@@ -31,7 +31,8 @@ class ChatbotCreate(BaseModel):
     llm_provider: str | None = None
     llm_model: str | None = None
     api_key: str | None = None
-
+    accent_primary: str | None = None
+    accent_secondary: str | None = None
 
 class ChatbotUpdate(BaseModel):
     name: str | None = None
@@ -40,7 +41,9 @@ class ChatbotUpdate(BaseModel):
     llm_provider: str | None = None
     llm_model: str | None = None
     api_key: str | None = None
-
+    memory_enabled: str | None = None
+    accent_primary: str | None = None
+    accent_secondary: str | None = None
 
 class ChatbotResponse(BaseModel):
     id: UUID
@@ -52,7 +55,11 @@ class ChatbotResponse(BaseModel):
     public_token: str | None
     created_at: datetime
     document_count: int = 0
-
+    memory_enabled: str = "false"
+    accent_primary: str = "#715A5A"
+    accent_secondary: str = "#2D2B33"
+    avatar_url: str | None = None
+    
     class Config:
         from_attributes = True
 
@@ -62,4 +69,40 @@ class ChatbotListResponse(BaseModel):
     total: int
 
 class ChatbotDetailResponse(ChatbotResponse):
-    document_ids: list[str] = []
+    document_ids: list[str] = []    
+    memory_enabled: str = "false"
+
+class ChatMessageResponse(BaseModel):
+    id: UUID
+    role: str
+    content: str
+    sources: str | None = None  # JSON string
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ChatSessionResponse(BaseModel):
+    id: UUID
+    chatbot_id: UUID
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    message_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class ChatSessionDetailResponse(ChatSessionResponse):
+    messages: list[ChatMessageResponse] = []
+
+
+class ChatSessionListResponse(BaseModel):
+    sessions: list[ChatSessionResponse]
+    total: int
+
+
+class ChatSessionUpdate(BaseModel):
+    title: str | None = None

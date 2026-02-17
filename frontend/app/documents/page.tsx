@@ -25,6 +25,13 @@ const fileTypeColors: Record<string, string> = {
   txt: "#9ca3af",
 };
 
+const statusConfig: Record<string, { color: string; label: string }> = {
+  uploaded: { color: "#9ca3af", label: "Uploaded" },
+  processing: { color: "#eab308", label: "Processing" },
+  ready: { color: "#22c55e", label: "Ready" },
+  failed: { color: "#ef4444", label: "Failed" },
+};
+
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,10 +59,8 @@ export default function DocumentsPage() {
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-
     setIsUploading(true);
     setError(null);
-
     try {
       for (const file of Array.from(files)) {
         await uploadDocument(file);
@@ -70,7 +75,6 @@ export default function DocumentsPage() {
 
   const handleDelete = async () => {
     if (selectedIds.size === 0) return;
-    
     try {
       for (const id of selectedIds) {
         await deleteDocument(id);
@@ -100,7 +104,6 @@ export default function DocumentsPage() {
   };
 
   const handleCreateChatbot = () => {
-    // TODO: implement chatbot creation with selected documents
     console.log("Create chatbot with documents:", Array.from(selectedIds));
   };
 
@@ -145,6 +148,23 @@ export default function DocumentsPage() {
             <span className="text-sm" style={{ color: "#D3DAD9", opacity: 0.7 }}>
               {documents.length} document{documents.length !== 1 ? "s" : ""}
             </span>
+            {documents.length > 0 && (
+              <button
+                onClick={() => {
+                  if (selectedIds.size === documents.length) {
+                    setSelectedIds(new Set());
+                  } else {
+                    setSelectedIds(new Set(documents.map((d) => d.id)));
+                  }
+                }}
+                className="text-xs px-2 py-1 rounded transition-all cursor-pointer"
+                style={{ color: "#D3DAD9", opacity: 0.5 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.backgroundColor = "#715A5A"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                {selectedIds.size === documents.length ? "Deselect All" : "Select All"}
+              </button>
+            )}
             {selectedIds.size > 0 && (
               <>
                 <span style={{ color: "#D3DAD9", opacity: 0.3 }}>•</span>
@@ -219,103 +239,124 @@ export default function DocumentsPage() {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSelect(doc.id, e);
-                  }}
-                  className="relative flex flex-col items-center p-3 rounded-lg cursor-pointer transition-colors group"
-                  style={{
-                    backgroundColor: selectedIds.has(doc.id) ? "#715A5A" : "transparent",
-                  }}
-                >
-                  {/* Select Circle */}
+              {documents.map((doc) => {
+                const status = statusConfig[doc.status] || statusConfig.uploaded;
+                return (
                   <div
+                    key={doc.id}
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleSelect(doc.id);
+                      handleSelect(doc.id, e);
                     }}
-                    className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all opacity-40 group-hover:opacity-100 hover:scale-110"
+                    className="relative flex flex-col items-center p-3 rounded-lg cursor-pointer transition-colors group"
                     style={{
-                      borderColor: selectedIds.has(doc.id) ? "#D3DAD9" : "#D3DAD9",
-                      backgroundColor: selectedIds.has(doc.id) ? "#D3DAD9" : "transparent",
-                      opacity: selectedIds.has(doc.id) ? 1 : undefined,
+                      backgroundColor: selectedIds.has(doc.id) ? "#715A5A" : "transparent",
                     }}
                   >
-                    {selectedIds.has(doc.id) && <Check className="w-3 h-3" style={{ color: "#37353E" }} />}
-                  </div>
-
-                  <div className="relative mb-2">
-                    <File
-                      className="w-12 h-12"
-                      style={{ color: fileTypeColors[doc.file_type] || "#9ca3af" }}
-                    />
-                    <span
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold px-1 rounded"
-                      style={{ backgroundColor: "#37353E", color: "#D3DAD9" }}
+                    {/* Select Circle */}
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(doc.id);
+                      }}
+                      className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all opacity-40 group-hover:opacity-100 hover:scale-110"
+                      style={{
+                        borderColor: selectedIds.has(doc.id) ? "#D3DAD9" : "#D3DAD9",
+                        backgroundColor: selectedIds.has(doc.id) ? "#D3DAD9" : "transparent",
+                        opacity: selectedIds.has(doc.id) ? 1 : undefined,
+                      }}
                     >
-                      {doc.file_type.toUpperCase()}
-                    </span>
+                      {selectedIds.has(doc.id) && <Check className="w-3 h-3" style={{ color: "#37353E" }} />}
+                    </div>
+
+                    {/* Status Dot */}
+                    <div
+                      className="absolute top-2 left-2 w-2 h-2 rounded-full"
+                      style={{ backgroundColor: status.color }}
+                      title={status.label}
+                    />
+
+                    <div className="relative mb-2">
+                      <File
+                        className="w-12 h-12"
+                        style={{ color: fileTypeColors[doc.file_type] || "#9ca3af" }}
+                      />
+                      <span
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold px-1 rounded"
+                        style={{ backgroundColor: "#37353E", color: "#D3DAD9" }}
+                      >
+                        {doc.file_type.toUpperCase()}
+                      </span>
+                    </div>
+                    <p
+                      className="text-xs text-center truncate w-full"
+                      style={{ color: "#D3DAD9" }}
+                      title={doc.original_filename}
+                    >
+                      {doc.original_filename}
+                    </p>
+                    <p className="text-[10px]" style={{ color: "#D3DAD9", opacity: 0.5 }}>
+                      {formatFileSize(doc.file_size)}
+                    </p>
                   </div>
-                  <p
-                    className="text-xs text-center truncate w-full"
-                    style={{ color: "#D3DAD9" }}
-                    title={doc.original_filename}
-                  >
-                    {doc.original_filename}
-                  </p>
-                  <p className="text-[10px]" style={{ color: "#D3DAD9", opacity: 0.5 }}>
-                    {formatFileSize(doc.file_size)}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="space-y-1">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSelect(doc.id, e);
-                  }}
-                  className="flex items-center gap-4 px-3 py-2 rounded cursor-pointer transition-colors group"
-                  style={{
-                    backgroundColor: selectedIds.has(doc.id) ? "#715A5A" : "transparent",
-                  }}
-                >
-                  {/* Select Circle */}
+              {documents.map((doc) => {
+                const status = statusConfig[doc.status] || statusConfig.uploaded;
+                return (
                   <div
+                    key={doc.id}
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleSelect(doc.id);
+                      handleSelect(doc.id, e);
                     }}
-                    className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all hover:scale-110"
+                    className="flex items-center gap-4 px-3 py-2 rounded cursor-pointer transition-colors group"
                     style={{
-                      borderColor: "#D3DAD9",
-                      backgroundColor: selectedIds.has(doc.id) ? "#D3DAD9" : "transparent",
-                      opacity: selectedIds.has(doc.id) ? 1 : 0.4,
+                      backgroundColor: selectedIds.has(doc.id) ? "#715A5A" : "transparent",
                     }}
                   >
-                    {selectedIds.has(doc.id) && <Check className="w-3 h-3" style={{ color: "#37353E" }} />}
+                    {/* Select Circle */}
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(doc.id);
+                      }}
+                      className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all hover:scale-110"
+                      style={{
+                        borderColor: "#D3DAD9",
+                        backgroundColor: selectedIds.has(doc.id) ? "#D3DAD9" : "transparent",
+                        opacity: selectedIds.has(doc.id) ? 1 : 0.4,
+                      }}
+                    >
+                      {selectedIds.has(doc.id) && <Check className="w-3 h-3" style={{ color: "#37353E" }} />}
+                    </div>
+                    <File
+                      className="w-5 h-5 flex-shrink-0"
+                      style={{ color: fileTypeColors[doc.file_type] || "#9ca3af" }}
+                    />
+                    <span className="flex-1 text-sm truncate" style={{ color: "#D3DAD9" }}>
+                      {doc.original_filename}
+                    </span>
+                    {/* Status Badge */}
+                    <span
+                      className="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: status.color + "20", color: status.color }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: status.color }} />
+                      {status.label}
+                    </span>
+                    <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
+                      {formatFileSize(doc.file_size)}
+                    </span>
+                    <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
+                      {formatDate(doc.created_at)}
+                    </span>
                   </div>
-                  <File
-                    className="w-5 h-5 flex-shrink-0"
-                    style={{ color: fileTypeColors[doc.file_type] || "#9ca3af" }}
-                  />
-                  <span className="flex-1 text-sm truncate" style={{ color: "#D3DAD9" }}>
-                    {doc.original_filename}
-                  </span>
-                  <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
-                    {formatFileSize(doc.file_size)}
-                  </span>
-                  <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
-                    {formatDate(doc.created_at)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

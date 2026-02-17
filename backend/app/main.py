@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, documents, chatbots
+from app.routers import auth, documents, chatbots,chat,sessions
+
 
 app = FastAPI(
     title="Bouldy API",
@@ -20,7 +21,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(chatbots.router, prefix="/api")
-
+app.include_router(chat.router, prefix="/api")
+app.include_router(sessions.router, prefix="/api")
 
 @app.get("/health")
 def health_check():

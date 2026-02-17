@@ -28,10 +28,14 @@ export interface Chatbot {
   public_token: string | null;
   created_at: string;
   document_count: number;
+  memory_enabled?: string;
+  accent_primary?: string;
+  accent_secondary?: string;
+  avatar_url?: string;
 }
 
 export interface ChatbotDetail extends Chatbot {
-  documents: Document[];
+  document_ids: string[];
 }
 
 export interface ChatbotListResponse {
@@ -46,10 +50,35 @@ export interface CreateChatbotData {
   llm_provider?: string;
   llm_model?: string;
   api_key?: string;
+  memory_enabled?: string;
+  accent_primary?: string;
+  accent_secondary?: string;
 }
 
-export interface ChatbotDetail extends Chatbot {
-  document_ids: string[];
+export interface ChatSession {
+  id: string;
+  chatbot_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+}
+
+export interface ChatMessageData {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  sources: string | null;
+  created_at: string;
+}
+
+export interface ChatSessionDetail extends ChatSession {
+  messages: ChatMessageData[];
+}
+
+export interface ChatSessionListResponse {
+  sessions: ChatSession[];
+  total: number;
 }
 
 // Auth helper
@@ -177,4 +206,75 @@ export async function deleteChatbot(id: string): Promise<void> {
   if (!res.ok) {
     throw new Error("Failed to delete chatbot");
   }
+}
+
+// Session APIs
+export async function getSessions(chatbotId: string): Promise<ChatSessionListResponse> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/sessions`, { headers });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch sessions");
+  }
+
+  return res.json();
+}
+
+export async function getSessionDetail(chatbotId: string, sessionId: string): Promise<ChatSessionDetail> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/sessions/${sessionId}`, { headers });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch session");
+  }
+
+  return res.json();
+}
+
+export async function updateSession(chatbotId: string, sessionId: string, title: string): Promise<ChatSession> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/sessions/${sessionId}`, {
+    method: "PATCH",
+    headers: {
+      ...headers,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ title }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update session");
+  }
+
+  return res.json();
+}
+
+export async function deleteSession(chatbotId: string, sessionId: string): Promise<void> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/sessions/${sessionId}`, {
+    method: "DELETE",
+    headers,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete session");
+  }
+}
+
+export async function uploadAvatar(chatbotId: string, file: File): Promise<{ avatar_url: string }> {
+  const headers = await getAuthHeaders();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/avatar`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to upload avatar");
+  }
+
+  return res.json();
 }
