@@ -29,6 +29,9 @@ export interface Chatbot {
   created_at: string;
   document_count: number;
   memory_enabled?: string;
+  accent_primary?: string;
+  accent_secondary?: string;
+  avatar_url?: string;
 }
 
 export interface ChatbotDetail extends Chatbot {
@@ -48,6 +51,8 @@ export interface CreateChatbotData {
   llm_model?: string;
   api_key?: string;
   memory_enabled?: string;
+  accent_primary?: string;
+  accent_secondary?: string;
 }
 
 export interface ChatSession {
@@ -254,4 +259,22 @@ export async function deleteSession(chatbotId: string, sessionId: string): Promi
   if (!res.ok) {
     throw new Error("Failed to delete session");
   }
+}
+
+export async function uploadAvatar(chatbotId: string, file: File): Promise<{ avatar_url: string }> {
+  const headers = await getAuthHeaders();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/avatar`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to upload avatar");
+  }
+
+  return res.json();
 }

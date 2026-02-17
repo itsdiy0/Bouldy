@@ -66,7 +66,12 @@ class Chatbot(Base):
     llm_api_key = Column(Text)
     # toggle for whether chatbot retains conversation history (context window) or treats each message as stateless
     memory_enabled = Column(String(10), default="false") 
-
+    
+    # Branding
+    accent_primary = Column(String(7), default="#715A5A")    # hex color
+    accent_secondary = Column(String(7), default="#2D2B33")  # hex color
+    avatar_url = Column(Text)  # S3 key for uploaded avatar
+    
     # Public access
     public_token = Column(String(64), unique=True, index=True)
     is_public = Column(String(10), default="false")

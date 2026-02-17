@@ -31,7 +31,8 @@ class ChatbotCreate(BaseModel):
     llm_provider: str | None = None
     llm_model: str | None = None
     api_key: str | None = None
-
+    accent_primary: str | None = None
+    accent_secondary: str | None = None
 
 class ChatbotUpdate(BaseModel):
     name: str | None = None
@@ -41,7 +42,8 @@ class ChatbotUpdate(BaseModel):
     llm_model: str | None = None
     api_key: str | None = None
     memory_enabled: str | None = None
-
+    accent_primary: str | None = None
+    accent_secondary: str | None = None
 
 class ChatbotResponse(BaseModel):
     id: UUID
@@ -54,6 +56,9 @@ class ChatbotResponse(BaseModel):
     created_at: datetime
     document_count: int = 0
     memory_enabled: str = "false"
+    accent_primary: str = "#715A5A"
+    accent_secondary: str = "#2D2B33"
+    avatar_url: str | None = None
     
     class Config:
         from_attributes = True

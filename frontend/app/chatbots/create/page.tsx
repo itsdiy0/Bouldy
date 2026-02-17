@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Check, File, Bot, Settings, Sparkles, BotIcon, Search } from "lucide-react";
 import ProviderIcon from "@/components/ui/ProviderIcon";
-import { getDocuments, createChatbot, Document, CreateChatbotData } from "@/lib/api";
+import { getDocuments, createChatbot, uploadAvatar, Document, CreateChatbotData } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
+import BrandingPicker from "@/components/ui/BrandingPicker";
 
 const STEPS = [
   { id: 1, name: "Basics", icon: Bot },
@@ -32,6 +33,10 @@ export default function CreateChatbotPage() {
   const [model, setModel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [memoryEnabled, setMemoryEnabled] = useState(false);
+  const [accentPrimary, setAccentPrimary] = useState("#715A5A");
+  const [accentSecondary, setAccentSecondary] = useState("#2D2B33");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDocs() {
@@ -90,8 +95,21 @@ export default function CreateChatbotPage() {
         llm_model: model,
         api_key: apiKey || undefined,
         memory_enabled: memoryEnabled ? "true" : "false",
+        accent_primary: accentPrimary,
+        accent_secondary: accentSecondary,
       };
-      await createChatbot(data);
+      const chatbot = await createChatbot(data);
+
+      // Upload avatar if selected
+      if (avatarFile) {
+        try {
+          await uploadAvatar(chatbot.id, avatarFile);
+        } catch {
+          // Non-blocking — chatbot created, avatar just failed
+          console.error("Avatar upload failed");
+        }
+      }
+
       router.push("/chatbots");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create chatbot");
@@ -176,6 +194,13 @@ export default function CreateChatbotPage() {
                     style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
                   />
                 </div>
+                <BrandingPicker
+                  primary={accentPrimary}
+                  secondary={accentSecondary}
+                  avatarPreview={avatarPreview}
+                  onColorChange={(p, s) => { setAccentPrimary(p); setAccentSecondary(s); }}
+                  onAvatarChange={(file, preview) => { setAvatarFile(file); setAvatarPreview(preview); }}
+                />
               </div>
             )}
 
@@ -336,6 +361,8 @@ export default function CreateChatbotPage() {
                   { label: "Model", value: model },
                   { label: "API Key", value: apiKey ? "••••••••" : "—" },
                   { label: "Memory", value: memoryEnabled ? "Enabled" : "Disabled" },
+                  { label: "Theme", value: accentPrimary },
+                  { label: "Avatar", value: avatarPreview ? "Custom" : "Default" },
                 ].map((row, i, arr) => (
                   <div
                     key={row.label}

@@ -2,7 +2,7 @@ import logging
 import secrets
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks,UploadFile,File
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -10,6 +10,7 @@ from app.models import Chatbot, Document, User
 from app.schemas import ChatbotCreate, ChatbotUpdate, ChatbotResponse, ChatbotDetailResponse, ChatbotListResponse
 from app.auth import get_current_user
 from app.services.indexing import index_chatbot_documents, delete_chatbot_index
+from app.storage import upload_file
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +75,8 @@ def create_chatbot(
         llm_model=data.llm_model,
         llm_api_key=data.api_key,
         public_token=secrets.token_urlsafe(32),
+        accent_primary=data.accent_primary or "#715A5A",
+        accent_secondary=data.accent_secondary or "#2D2B33",
     )
     
     chatbot.documents = docs
@@ -209,3 +212,29 @@ def delete_chatbot(
     db.commit()
     
     return {"message": "Chatbot deleted"}
+
+@router.post("/{chatbot_id}/avatar")
+async def upload_avatar(
+    chatbot_id: UUID,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    chatbot = db.query(Chatbot).filter(
+        Chatbot.id == chatbot_id,
+        Chatbot.user_id == current_user.id,
+    ).first()
+    if not chatbot:
+        raise HTTPException(404, "Chatbot not found")
+    
+    content = await file.read()
+    if len(content) > 2 * 1024 * 1024:  # 2MB limit
+        raise HTTPException(400, "Avatar too large. Max 2MB.")
+    
+    s3_key = f"avatars/{current_user.id}/{chatbot_id}.png"
+    upload_file(content, s3_key, file.content_type or "image/png")
+    
+    chatbot.avatar_url = s3_key
+    db.commit()
+    
+    return {"avatar_url": s3_key}
