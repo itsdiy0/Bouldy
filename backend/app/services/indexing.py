@@ -15,8 +15,13 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.config import settings
 from app.storage import get_file
+from app.database import SessionLocal
+from app.models import Document as DocumentModel
 
 logger = logging.getLogger(__name__)
+
+
+# ---------- Clients (initialized once) ----------
 
 def get_qdrant_client() -> QdrantClient:
     return QdrantClient(host=settings.qdrant_host, port=settings.qdrant_port)
@@ -32,6 +37,9 @@ def get_embed_model() -> OpenAIEmbedding:
 def get_collection_name(chatbot_id: UUID) -> str:
     """Each chatbot gets its own Qdrant collection."""
     return f"chatbot_{str(chatbot_id)}"
+
+
+# ---------- File Parsers ----------
 
 def parse_pdf_pages(content: bytes) -> list[dict]:
     """Extract text from PDF bytes, per page. Returns list of {text, page}."""
@@ -54,6 +62,24 @@ def parse_docx(content: bytes) -> str:
 def parse_txt(content: bytes) -> str:
     """Extract text from TXT bytes."""
     return content.decode("utf-8", errors="ignore")
+
+
+def update_document_status(doc_id, status: str):
+    """Update a document's status in the database."""
+    db = SessionLocal()
+    try:
+        doc = db.query(DocumentModel).filter(DocumentModel.id == doc_id).first()
+        if doc:
+            doc.status = status
+            db.commit()
+    except Exception as e:
+        logger.error(f"Failed to update document {doc_id} status: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+# ---------- Core Pipeline ----------
 
 def index_chatbot_documents(
     chatbot_id: UUID,
@@ -78,6 +104,7 @@ def index_chatbot_documents(
     # 2. Download and parse all documents into LlamaIndex Documents
     li_documents = []
     for doc in documents:
+        update_document_status(doc.id, "processing")
         try:
             content = get_file(doc.s3_key)
             base_metadata = {
@@ -87,7 +114,6 @@ def index_chatbot_documents(
             }
 
             if doc.file_type == "pdf":
-                # PDF: one LlamaIndex doc per page (preserves page numbers)
                 pages = parse_pdf_pages(content)
                 for page_data in pages:
                     li_documents.append(LIDocument(
@@ -116,10 +142,14 @@ def index_chatbot_documents(
 
             else:
                 logger.warning(f"Unsupported file type: {doc.file_type}")
+                update_document_status(doc.id, "failed")
                 continue
+
+            update_document_status(doc.id, "ready")
 
         except Exception as e:
             logger.error(f"Failed to parse document {doc.id}: {e}")
+            update_document_status(doc.id, "failed")
             continue
 
     if not li_documents:
