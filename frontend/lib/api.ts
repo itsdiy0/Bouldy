@@ -278,3 +278,17 @@ export async function uploadAvatar(chatbotId: string, file: File): Promise<{ ava
 
   return res.json();
 }
+
+export async function togglePublish(chatbotId: string): Promise<{ is_public: string; public_token: string }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/publish`, {
+    method: "PATCH",
+    headers,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to toggle publish");
+  }
+
+  return res.json();
+}
