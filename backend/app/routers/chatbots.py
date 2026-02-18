@@ -262,3 +262,27 @@ def get_avatar(
     
     content = get_s3_file(chatbot.avatar_url)
     return Response(content=content, media_type="image/png")
+
+# Publish/unpublish a chatbot
+@router.patch("/{chatbot_id}/publish")
+def toggle_publish(
+    chatbot_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    chatbot = db.query(Chatbot).filter(
+        Chatbot.id == chatbot_id,
+        Chatbot.user_id == current_user.id,
+    ).first()
+    
+    if not chatbot:
+        raise HTTPException(404, "Chatbot not found")
+    
+    chatbot.is_public = "false" if chatbot.is_public == "true" else "true"
+    db.commit()
+    db.refresh(chatbot)
+    
+    return {
+        "is_public": chatbot.is_public,
+        "public_token": chatbot.public_token,
+    }
