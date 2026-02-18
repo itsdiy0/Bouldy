@@ -1,6 +1,7 @@
 """
 Public chat endpoints for Bouldy.
 No authentication required — accessed via public_token.
+Rate limited to prevent abuse.
 """
 import json
 import logging
@@ -10,6 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from llama_index.core import Settings as LISettings
 from llama_index.vector_stores.qdrant import QdrantVectorStore
@@ -25,6 +28,7 @@ from app.routers.chat import (
 
 logger = logging.getLogger(__name__)
 
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/public", tags=["public"])
 
 
@@ -68,7 +72,9 @@ def get_public_chatbot(
 
 # Public streaming chat
 @router.post("/{token}/chat")
+@limiter.limit("20/minute")
 def public_chat(
+    request: Request,
     token: str,
     req: PublicChatRequest,
     db: Session = Depends(get_db),
