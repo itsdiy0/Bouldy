@@ -1,7 +1,6 @@
-"""
-Chat session endpoints for Bouldy.
-Handles: session CRUD, message history retrieval.
-"""
+# Chat session endpoints for Bouldy
+# Handles: session CRUD, message history retrieval
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,6 +13,8 @@ from app.schemas import (
     ChatSessionListResponse, ChatSessionUpdate,
 )
 from app.auth import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chatbots/{chatbot_id}/sessions", tags=["sessions"])
 
@@ -77,6 +78,7 @@ def create_session(
     db.commit()
     db.refresh(session)
 
+    logger.info(f"Session created: {session.id} for chatbot {chatbot_id}")
     return session_to_response(session)
 
 
@@ -132,6 +134,7 @@ def update_session(
 
     if data.title is not None:
         session.title = data.title
+        logger.info(f"Session {session_id} renamed to: {data.title}")
 
     db.commit()
     db.refresh(session)
@@ -161,4 +164,5 @@ def delete_session(
     db.delete(session)
     db.commit()
 
+    logger.info(f"Session deleted: {session_id} from chatbot {chatbot_id}")
     return {"message": "Session deleted"}

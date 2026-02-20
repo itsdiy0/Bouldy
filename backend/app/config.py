@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     openai_embedding_key: str = ""
     embedding_model: str = "text-embedding-3-small"
 
+    environment: str = "development"
+    
     class Config:
         env_file = ".env"
 

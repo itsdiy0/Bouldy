@@ -5,6 +5,9 @@ from app.routers import auth, documents, chatbots,chat,sessions,public,dashboard
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.routers.public import limiter
+from app.logging_config import setup_logging
+
+setup_logging()
 
 app = FastAPI(
     title="Bouldy API",
