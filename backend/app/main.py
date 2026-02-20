@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, documents, chatbots,chat,sessions,public,dashboard
+from app.routers import auth, documents, chatbots,chat,sessions,public,dashboard,health
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.routers.public import limiter
@@ -30,7 +30,4 @@ app.include_router(chat.router, prefix="/api")
 app.include_router(sessions.router, prefix="/api")
 app.include_router(public.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
-
-@app.get("/health")
-def health_check():
-    return {"status": "healthy", "service": "bouldy-api"}
+app.include_router(health.router, prefix="/api")
