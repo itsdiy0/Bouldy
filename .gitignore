@@ -8,6 +8,7 @@ env/
 venv/
 *.egg-info/
 .env
+.env.production
 
 # Node
 node_modules/

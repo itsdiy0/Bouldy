@@ -6,6 +6,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.routers.public import limiter
 from app.logging_config import setup_logging
+from app.config import settings
 
 setup_logging()
 
@@ -77,7 +78,7 @@ Public endpoints (`/api/public/*`) require no authentication.
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
