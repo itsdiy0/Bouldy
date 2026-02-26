@@ -30,7 +30,10 @@ class Settings(BaseSettings):
 
     # Rate limiting
     public_rate_limit: str = "20/minute"
-
+    
+    # Redis
+    redis_url: str = "redis://localhost:6379"
+    
     class Config:
         env_file = ".env"
 

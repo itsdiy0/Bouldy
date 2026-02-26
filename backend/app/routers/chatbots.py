@@ -13,6 +13,7 @@ from app.services.indexing import index_chatbot_documents, delete_chatbot_index
 from app.storage import upload_file
 from fastapi.responses import Response
 from app.storage import get_file as get_s3_file
+from app.services.cache import clear_chatbot_cache
 
 logger = logging.getLogger(__name__)
 
@@ -197,6 +198,9 @@ def update_chatbot(
         else:
             background_tasks.add_task(delete_chatbot_index, chatbot.id)
             logger.info(f"Queued index deletion for chatbot {chatbot.id} (no docs)")
+        # Clear cache for this chatbot
+        clear_chatbot_cache(str(chatbot_id))
+        
     
     return chatbot_to_response(chatbot)
 
@@ -219,7 +223,11 @@ def delete_chatbot(
     
     # Clean up Qdrant collection in background
     background_tasks.add_task(delete_chatbot_index, chatbot_id)
-    
+ 
+    # Clean up cache and Qdrant collection
+    clear_chatbot_cache(str(chatbot_id))
+    background_tasks.add_task(delete_chatbot_index, chatbot_id)
+
     db.delete(chatbot)
     db.commit()
     

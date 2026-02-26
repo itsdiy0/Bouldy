@@ -101,6 +101,7 @@ python-multipart==0.0.9
 pytz==2025.2
 PyYAML==6.0.3
 qdrant-client==1.16.2
+redis==7.2.1
 regex==2026.1.15
 requests==2.32.5
 rsa==4.9.1

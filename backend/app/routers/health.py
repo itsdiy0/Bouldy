@@ -53,6 +53,15 @@ def readiness(db: Session = Depends(get_db)):
 
     all_ok = all(v == "ok" for v in checks.values())
 
+    # Redis
+    try:
+        from app.services.cache import get_redis_client
+        r = get_redis_client()
+        r.ping()
+        checks["redis"] = "ok"
+    except Exception as e:
+        checks["redis"] = f"error: {str(e)}"
+
     return {
         "status": "ok" if all_ok else "degraded",
         "checks": checks,
