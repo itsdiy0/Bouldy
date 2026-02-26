@@ -31,3 +31,5 @@ Thumbs.db
 backend/storage/
 *.db
 *.sqlite
+k8s/secrets.yaml
+k8s/deploy.sh
