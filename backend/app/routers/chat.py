@@ -23,6 +23,7 @@ from app.auth import get_current_user
 from app.config import settings
 from app.services.indexing import get_qdrant_client, get_embed_model, get_collection_name
 from app.services.llm_provider import get_llm
+from app.services.cache import get_cached_response, cache_response
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +172,19 @@ def chat(
 
     auto_title_session(session, req.message)
 
+    # Check cache
+    cached = get_cached_response(str(chatbot_id), req.message)
+    if cached:
+        save_message(session.id, "user", req.message, None, db)
+        save_message(session.id, "assistant", cached["response"], cached["sources"], db)
+        session.updated_at = datetime.utcnow()
+        db.commit()
+        return ChatResponse(
+            response=cached["response"],
+            sources=cached["sources"],
+            session_id=str(session.id),
+        )
+
     # Load index and LLM
     try:
         index = load_chatbot_index(chatbot_id)
@@ -201,6 +215,10 @@ def chat(
     save_message(session.id, "user", req.message, None, db)
     save_message(session.id, "assistant", str(response), sources, db)
     session.updated_at = datetime.utcnow()
+
+    # Cache the response
+    cache_response(str(chatbot_id), req.message, str(response), sources)
+
     db.commit()
 
     return ChatResponse(
@@ -237,6 +255,18 @@ def chat_stream(
 
     # Save user message immediately
     save_message(session.id, "user", req.message, None, db)
+
+    # Check cache (return as non-streamed if cached)
+    cached = get_cached_response(str(chatbot_id), req.message)
+    if cached:
+        save_message(session.id, "assistant", cached["response"], cached["sources"], db)
+        session.updated_at = datetime.utcnow()
+        db.commit()
+        def cached_generate():
+            yield cached["response"]
+            yield f"\n\n__SOURCES__{json.dumps(cached['sources'])}"
+            yield f"\n__SESSION__{str(session.id)}"
+        return StreamingResponse(cached_generate(), media_type="text/plain")
 
     # Load index and LLM
     try:
@@ -283,6 +313,7 @@ def chat_stream(
         save_db = SessionLocal()
         try:
             save_message(UUID(session_id), "assistant", full_response, sources, save_db)
+            cache_response(str(chatbot_id), req.message, full_response, sources)
             save_session = save_db.query(ChatSession).filter(ChatSession.id == session_id).first()
             if save_session:
                 save_session.updated_at = datetime.utcnow()

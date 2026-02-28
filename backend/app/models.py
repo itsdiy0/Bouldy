@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, String, DateTime, ForeignKey, Table, Integer, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, Table, Integer, Text,Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -113,3 +113,46 @@ class ChatMessage(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     session = relationship("ChatSession", back_populates="messages")
+
+class Evaluation(Base):
+    __tablename__ = "evaluations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chatbot_id = Column(UUID(as_uuid=True), ForeignKey("chatbots.id", ondelete="CASCADE"), nullable=False)
+
+    # Overall aggregate scores (averages across all questions)
+    faithfulness = Column(Float, nullable=True)
+    answer_relevancy = Column(Float, nullable=True)
+    context_precision = Column(Float, nullable=True)
+
+    question_count = Column(Integer)
+    status = Column(String(20), default="running")  # running, completed, failed
+    error_message = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    chatbot = relationship("Chatbot", backref="evaluations")
+    results = relationship("EvaluationResult", back_populates="evaluation", cascade="all, delete-orphan", order_by="EvaluationResult.question_index")
+
+
+class EvaluationResult(Base):
+    __tablename__ = "evaluation_results"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    evaluation_id = Column(UUID(as_uuid=True), ForeignKey("evaluations.id", ondelete="CASCADE"), nullable=False)
+
+    question_index = Column(Integer, nullable=False)  # ordering
+    question = Column(Text, nullable=False)
+    ground_truth = Column(Text, nullable=True)  # LLM-generated expected answer
+    generated_answer = Column(Text, nullable=False)  # what the chatbot actually said
+    retrieved_contexts = Column(Text, nullable=True)  # JSON list of retrieved chunks
+
+    # Per-question RAGAS scores
+    faithfulness = Column(Float, nullable=True)
+    answer_relevancy = Column(Float, nullable=True)
+    context_precision = Column(Float, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    evaluation = relationship("Evaluation", back_populates="results")

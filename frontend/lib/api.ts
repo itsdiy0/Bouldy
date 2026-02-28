@@ -292,3 +292,39 @@ export async function togglePublish(chatbotId: string): Promise<{ is_public: str
 
   return res.json();
 }
+
+export async function startEvaluation(chatbotId: string): Promise<any> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/evaluate`, {
+    method: "POST",
+    headers,
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to start evaluation");
+  }
+  return res.json();
+}
+
+export async function getEvaluations(chatbotId: string): Promise<any[]> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/evaluate`, { headers });
+  if (!res.ok) throw new Error("Failed to fetch evaluations");
+  return res.json();
+}
+
+export async function getEvaluationDetail(chatbotId: string, evaluationId: string): Promise<any> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/evaluate/${evaluationId}`, { headers });
+  if (!res.ok) throw new Error("Failed to fetch evaluation detail");
+  return res.json();
+}
+
+export async function deleteEvaluation(chatbotId: string, evaluationId: string): Promise<void> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/evaluate/${evaluationId}`, {
+    method: "DELETE",
+    headers,
+  });
+  if (!res.ok) throw new Error("Failed to delete evaluation");
+}

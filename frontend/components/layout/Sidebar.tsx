@@ -1,42 +1,35 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { LayoutDashboard, FileText, PlusCircle, Bot, Settings, User, LogOut } from "lucide-react";
+import { getChatbots } from "@/lib/api";
 
 const navigation = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    name: "Create Chatbot",
-    href: "/chatbots/create",
-    icon: PlusCircle,
-  },
-  {
-    name: "Documents",
-    href: "/documents",
-    icon: FileText,
-  },
-  {
-    name: "My Chatbots",
-    href: "/chatbots",
-    icon: Bot,
-  },
-  {
-    name: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Create Chatbot", href: "/chatbots/create", icon: PlusCircle },
+  { name: "Documents", href: "/documents", icon: FileText },
+  { name: "My Chatbots", href: "/chatbots", icon: Bot },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [chatbotCount, setChatbotCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function fetchCount() {
+      try {
+        const data = await getChatbots();
+        setChatbotCount(data.total);
+      } catch { /* ignore */ }
+    }
+    if (session?.user?.id) fetchCount();
+  }, [session?.user?.id, pathname]);
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" });
@@ -68,7 +61,7 @@ export default function Sidebar() {
       <nav className="flex-1">
         <ul className="space-y-0">
           {navigation.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href === "/chatbots" && pathname?.startsWith("/chatbots/") && !pathname?.includes("create"));
             const Icon = item.icon;
 
             return (
@@ -81,14 +74,10 @@ export default function Sidebar() {
                       color: "#D3DAD9",
                     }}
                     onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = "#715A5A80";
-                      }
+                      if (!isActive) e.currentTarget.style.backgroundColor = "#715A5A80";
                     }}
                     onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }
+                      if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
                     }}
                   >
                     <Icon className="w-5 h-5" />
@@ -101,7 +90,7 @@ export default function Sidebar() {
                           color: "#37353E",
                         }}
                       >
-                        0
+                        {chatbotCount}
                       </span>
                     )}
                   </div>
@@ -133,12 +122,8 @@ export default function Sidebar() {
             color: "#D3DAD9",
             border: "none",
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#715A5A40";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#715A5A40"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
         >
           <LogOut className="w-4 h-4" />
           <span className="text-sm font-medium">Logout</span>
