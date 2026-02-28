@@ -17,6 +17,7 @@ services:
       - QDRANT_PORT=6333
       - OPENAI_EMBEDDING_KEY=${OPENAI_EMBEDDING_KEY}
       - ENVIRONNMENT=development
+      - REDIS_URL=redis://redis:6379
     depends_on:
       db:
         condition: service_healthy
@@ -62,7 +63,15 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   postgres_data:
   minio_data:
   qdrant_data:
+  redis_data:
