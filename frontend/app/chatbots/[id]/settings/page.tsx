@@ -8,6 +8,7 @@ import BrandingPicker from "@/components/ui/BrandingPicker";
 import { Save, Check, File, Search, Loader2, ChevronLeft, Trash2 } from "lucide-react";
 import { getChatbot, updateChatbot, deleteChatbot, uploadAvatar, getDocuments, ChatbotDetail, Document } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
+import EvaluationTab from "@/components/chatbot/EvaluationTab";
 
 const fileTypeColors: Record<string, string> = { pdf: "#ef4444", docx: "#3b82f6", txt: "#9ca3af" };
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -41,7 +42,7 @@ export default function ChatbotSettingsPage() {
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"general" | "documents" | "llm">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "documents" | "llm" | "evaluation">("general");
 
   useEffect(() => {
     async function load() {
@@ -140,6 +141,7 @@ export default function ChatbotSettingsPage() {
     { id: "general" as const, label: "General" },
     { id: "documents" as const, label: "Documents" },
     { id: "llm" as const, label: "LLM Config" },
+    { id: "evaluation" as const, label: "Evaluation" },
   ];
 
   if (loading) {
@@ -420,6 +422,11 @@ export default function ChatbotSettingsPage() {
                     </button>
                   </div>
                 </div>
+              )}
+
+              {/* Evaluation Tab */}
+              {activeTab === "evaluation" && (
+                <EvaluationTab chatbotId={chatbotId} />
               )}
             </div>
           </div>

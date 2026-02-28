@@ -8,10 +8,10 @@ import random
 from uuid import UUID
 
 from llama_index.core import VectorStoreIndex
-from llama_index.core.schema import TextNode
+from llama_index.vector_stores.qdrant import QdrantVectorStore
 
 from app.services.llm_provider import get_llm
-from app.services.indexing import get_embed_model, get_qdrant_store
+from app.services.indexing import get_embed_model, get_qdrant_client, get_collection_name
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,13 @@ Respond with ONLY a JSON array, no other text or markdown:
 def _sample_chunks(chatbot_id: UUID, num_chunks: int = 15) -> list[str]:
     """Sample diverse chunks from the chatbot's vector store."""
     embed_model = get_embed_model()
-    vector_store = get_qdrant_store(str(chatbot_id))
+    client = get_qdrant_client()
+    collection_name = get_collection_name(chatbot_id)
+
+    vector_store = QdrantVectorStore(
+        client=client,
+        collection_name=collection_name,
+    )
 
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,

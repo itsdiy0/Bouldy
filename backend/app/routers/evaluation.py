@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from ragas import evaluate as ragas_evaluate
 from ragas.metrics import Faithfulness, AnswerRelevancy, ContextPrecision
 from ragas.llms import LlamaIndexLLMWrapper
-from ragas.embeddings import LlamaIndexEmbeddingWrapper
+from ragas.embeddings import LlamaIndexEmbeddingsWrapper
 from ragas.dataset_schema import SingleTurnSample, EvaluationDataset
 
 from llama_index.llms.openai import OpenAI
@@ -103,7 +103,7 @@ def run_evaluation_task(chatbot_id: str, evaluation_id: str):
         evaluator_llm = LlamaIndexLLMWrapper(
             OpenAI(model="gpt-4o-mini", api_key=settings.openai_embedding_key)
         )
-        evaluator_embeddings = LlamaIndexEmbeddingWrapper(embed_model)
+        evaluator_embeddings = LlamaIndexEmbeddingsWrapper(embed_model)
 
         metrics = [
             Faithfulness(llm=evaluator_llm),
