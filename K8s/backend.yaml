@@ -13,9 +13,22 @@ spec:
       labels:
         app: api
     spec:
+      # Run migrations before API starts
+      initContainers:
+        - name: migrate
+          image: ghcr.io/itsdiy0/bouldy-api:latest
+          imagePullPolicy: Always
+          command: ["alembic", "upgrade", "head"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bouldy-secrets
+                  key: DATABASE_URL
       containers:
         - name: api
           image: ghcr.io/itsdiy0/bouldy-api:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           env:
@@ -56,6 +69,8 @@ spec:
                 secretKeyRef:
                   name: bouldy-secrets
                   key: SECRET_KEY
+            - name: REDIS_URL
+              value: "redis://redis:6379"
             - name: ALLOWED_ORIGINS
               value: "https://bouldy.diy0.dev"
           resources:
