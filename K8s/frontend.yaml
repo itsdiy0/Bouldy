@@ -16,11 +16,12 @@ spec:
       containers:
         - name: frontend
           image: ghcr.io/itsdiy0/bouldy-frontend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           env:
             - name: NEXT_PUBLIC_API_URL
-              value: "https://bouldy.diy0.dev/api-internal"
+              value: "https://bouldy.diy0.dev"
             - name: NEXTAUTH_URL
               value: "https://bouldy.diy0.dev"
             - name: NEXTAUTH_SECRET
