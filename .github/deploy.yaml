@@ -92,16 +92,11 @@ jobs:
           username: ${{ secrets.HOMELAB_USER }}
           key: ${{ secrets.HOMELAB_SSH_KEY }}
           script: |
-            # Pull latest images
-            sudo crictl pull ${{ env.BACKEND_IMAGE }}:latest
-            sudo crictl pull ${{ env.FRONTEND_IMAGE }}:latest
-
-            # Restart deployments to pick up new images
+            # Restart deployments — imagePullPolicy: Always pulls latest
             kubectl rollout restart deployment/api -n bouldy
             kubectl rollout restart deployment/frontend -n bouldy
 
-            # Wait for rollout
-            kubectl rollout status deployment/api -n bouldy --timeout=120s
+            # Wait for rollout (init container runs migrations before API starts)
+            kubectl rollout status deployment/api -n bouldy --timeout=180s
             kubectl rollout status deployment/frontend -n bouldy --timeout=120s
 
-            echo "✅ Deployed successfully"
