@@ -48,7 +48,7 @@ def get_llm(provider: str, model: str, api_key: str | None = None) -> LLM:
 
     elif provider == "ollama":
         from llama_index.llms.ollama import Ollama
-        logger.info(f"Connecting to Ollama at host.docker.internal:11434")
+        logger.info("Connecting to Ollama at host.docker.internal:11434")
         return Ollama(model=model, base_url="http://host.docker.internal:11434")
 
     else:

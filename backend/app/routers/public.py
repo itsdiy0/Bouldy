@@ -5,7 +5,6 @@ Rate limited to prevent abuse.
 """
 import json
 import logging
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -14,16 +13,12 @@ from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from llama_index.core import Settings as LISettings
-from llama_index.vector_stores.qdrant import QdrantVectorStore
 
-from app.database import get_db, SessionLocal
-from app.models import Chatbot, ChatSession, ChatMessage
-from app.services.indexing import get_qdrant_client, get_embed_model, get_collection_name
+from app.database import get_db
+from app.models import Chatbot
 from app.services.llm_provider import get_llm
 from app.routers.chat import (
-    load_chatbot_index, extract_sources, trim_to_sentences,
-    RELEVANCE_THRESHOLD, MEMORY_MESSAGE_LIMIT,
+    load_chatbot_index, extract_sources,
 )
 
 logger = logging.getLogger(__name__)

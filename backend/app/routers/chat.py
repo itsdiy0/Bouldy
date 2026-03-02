@@ -20,7 +20,6 @@ from llama_index.vector_stores.qdrant import QdrantVectorStore
 from app.database import get_db
 from app.models import Chatbot, ChatSession, ChatMessage, User
 from app.auth import get_current_user
-from app.config import settings
 from app.services.indexing import get_qdrant_client, get_embed_model, get_collection_name
 from app.services.llm_provider import get_llm
 from app.services.cache import get_cached_response, cache_response

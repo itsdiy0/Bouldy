@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Chatbot, ChatSession, ChatMessage, User
+from app.models import Chatbot, ChatSession, User
 from app.schemas import (
     ChatSessionResponse, ChatSessionDetailResponse,
     ChatSessionListResponse, ChatSessionUpdate,
