@@ -21,7 +21,7 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXT_PUBLIC_API_URL
-              value: "https://bouldy.diy0.dev"
+              value: "https://api-bouldy.diy0.dev"
             - name: NEXTAUTH_URL
               value: "https://bouldy.diy0.dev"
             - name: NEXTAUTH_SECRET

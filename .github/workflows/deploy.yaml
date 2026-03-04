@@ -75,7 +75,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            NEXT_PUBLIC_API_URL=https://bouldy.diy0.dev
+            NEXT_PUBLIC_API_URL=https://api-bouldy.diy0.dev
 
   deploy:
     name: Deploy to K3s
