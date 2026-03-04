@@ -39,6 +39,7 @@ def get_dashboard(
     chatbot_ids = [c.id for c in db.query(Chatbot.id).filter(Chatbot.user_id == uid).all()]
     total_sessions = 0
     total_messages = 0
+    session_ids = []
     if chatbot_ids:
         total_sessions = db.query(func.count(ChatSession.id)).filter(
             ChatSession.chatbot_id.in_(chatbot_ids)
