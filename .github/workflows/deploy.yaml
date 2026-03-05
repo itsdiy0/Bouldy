@@ -100,6 +100,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no \
               -o ProxyCommand="cloudflared access ssh --hostname %h" \
               ${{ secrets.HOMELAB_USER }}@${{ secrets.HOMELAB_HOST }} << 'EOF'
+            export KUBECONFIG=~/.kube/config
             kubectl patch deployment api -n bouldy -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"deploy-timestamp\":\"$(date +%s)\"}}}}}"
             kubectl patch deployment frontend -n bouldy -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"deploy-timestamp\":\"$(date +%s)\"}}}}}"
             kubectl rollout status deployment/api -n bouldy --timeout=180s
