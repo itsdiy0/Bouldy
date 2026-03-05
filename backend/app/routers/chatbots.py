@@ -14,6 +14,8 @@ from app.storage import upload_file
 from fastapi.responses import Response
 from app.storage import get_file as get_s3_file
 from app.services.cache import clear_chatbot_cache
+from pydantic import BaseModel
+
 
 logger = logging.getLogger(__name__)
 
@@ -294,3 +296,42 @@ def toggle_publish(
         "is_public": chatbot.is_public,
         "public_token": chatbot.public_token,
     }
+
+class ValidateKeyRequest(BaseModel):
+    provider: str
+    model: str
+    api_key: str | None = None
+
+
+class ValidateKeyResponse(BaseModel):
+    valid: bool
+    error: str | None = None
+
+
+@router.post("/validate-key", response_model=ValidateKeyResponse)
+def validate_api_key(
+    req: ValidateKeyRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Test an LLM provider API key by making a minimal completion call."""
+    try:
+        from app.services.llm_provider import get_llm
+
+        llm = get_llm(req.provider, req.model, req.api_key)
+        # Minimal call — single token response
+        response = llm.complete("Say OK")
+        if response and response.text:
+            return ValidateKeyResponse(valid=True)
+        return ValidateKeyResponse(valid=False, error="No response from provider")
+
+    except ValueError as e:
+        return ValidateKeyResponse(valid=False, error=str(e))
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "auth" in error_msg or "key" in error_msg or "401" in error_msg or "403" in error_msg:
+            return ValidateKeyResponse(valid=False, error="Invalid API key")
+        if "model" in error_msg or "not found" in error_msg or "404" in error_msg:
+            return ValidateKeyResponse(valid=False, error="Model not found — check the model name")
+        if "connect" in error_msg or "timeout" in error_msg:
+            return ValidateKeyResponse(valid=False, error="Could not connect to provider")
+        return ValidateKeyResponse(valid=False, error=f"Validation failed: {str(e)[:100]}")

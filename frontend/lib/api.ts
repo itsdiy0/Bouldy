@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { getSession } from "next-auth/react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -327,4 +328,14 @@ export async function deleteEvaluation(chatbotId: string, evaluationId: string):
     headers,
   });
   if (!res.ok) throw new Error("Failed to delete evaluation");
+}
+export async function validateKey(provider: string, model: string, apiKey?: string): Promise<{ valid: boolean; error?: string }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/chatbots/validate-key`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ provider, model, api_key: apiKey || "" }),
+  });
+  if (!res.ok) throw new Error("Validation request failed");
+  return res.json();
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Check, File, Bot, Settings, Sparkles, BotIcon, Search } from "lucide-react";
 import ProviderIcon from "@/components/ui/ProviderIcon";
-import { getDocuments, createChatbot, uploadAvatar, Document, CreateChatbotData } from "@/lib/api";
+import { getDocuments, createChatbot, uploadAvatar, validateKey, Document, CreateChatbotData } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
 import BrandingPicker from "@/components/ui/BrandingPicker";
 
@@ -37,6 +37,8 @@ export default function CreateChatbotPage() {
   const [accentSecondary, setAccentSecondary] = useState("#2D2B33");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [validating, setValidating] = useState(false);
+  const [keyError, setKeyError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDocs() {
@@ -83,6 +85,27 @@ export default function CreateChatbotPage() {
     if (canNavigateTo(step)) setCurrentStep(step);
   };
 
+  const handleStepNext = async () => {
+    if (currentStep === 3) {
+      setValidating(true);
+      setKeyError(null);
+      try {
+        const result = await validateKey(provider, model, apiKey);
+        if (!result.valid) {
+          setKeyError(result.error || "Invalid credentials");
+          setValidating(false);
+          return;
+        }
+      } catch {
+        setKeyError("Could not validate credentials");
+        setValidating(false);
+        return;
+      }
+      setValidating(false);
+    }
+    setCurrentStep((s) => s + 1);
+  };
+
   const handleCreate = async () => {
     setIsLoading(true);
     setError(null);
@@ -100,12 +123,10 @@ export default function CreateChatbotPage() {
       };
       const chatbot = await createChatbot(data);
 
-      // Upload avatar if selected
       if (avatarFile) {
         try {
           await uploadAvatar(chatbot.id, avatarFile);
         } catch {
-          // Non-blocking — chatbot created, avatar just failed
           console.error("Avatar upload failed");
         }
       }
@@ -266,13 +287,21 @@ export default function CreateChatbotPage() {
             {/* Step 3: LLM Config */}
             {currentStep === 3 && (
               <div className="space-y-5">
+                {/* Validation Error */}
+                {keyError && (
+                  <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
+                    {keyError}
+                  </div>
+                )}
+
+                {/* Provider Selection */}
                 <div>
                   <label className="block text-sm mb-3" style={{ color: "#D3DAD9", opacity: 0.7 }}>Provider *</label>
                   <div className="grid grid-cols-2 gap-3">
                     {LLM_PROVIDERS.map((p) => (
                       <button
                         key={p.id}
-                        onClick={() => { setProvider(p.id); setModel(""); }}
+                        onClick={() => { setProvider(p.id); setModel(""); setKeyError(null); }}
                         className="px-4 py-3 rounded-lg text-left transition-all flex items-center gap-3 cursor-pointer"
                         style={{
                           backgroundColor: provider === p.id ? p.bg : "#37353E",
@@ -285,17 +314,17 @@ export default function CreateChatbotPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Model */}
                 {provider && (
                   <div>
-                    <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
-                      Model {selectedProvider?.customModel ? "" : "*"}
-                    </label>
+                    <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>Model *</label>
                     {selectedProvider?.customModel ? (
                       <>
                         <input
                           type="text"
                           value={model}
-                          onChange={(e) => setModel(e.target.value)}
+                          onChange={(e) => { setModel(e.target.value); setKeyError(null); }}
                           placeholder="e.g. llama3, mistral, codellama"
                           className="w-full px-4 py-3 rounded-lg outline-none text-sm"
                           style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
@@ -307,13 +336,13 @@ export default function CreateChatbotPage() {
                           ))}
                         </datalist>
                         <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
-                          Type the exact model name installed on your Ollama server, or pick a suggestion
+                          Type the exact model name installed on your Ollama server
                         </p>
                       </>
                     ) : (
                       <select
                         value={model}
-                        onChange={(e) => setModel(e.target.value)}
+                        onChange={(e) => { setModel(e.target.value); setKeyError(null); }}
                         className="w-full px-4 py-3 rounded-lg outline-none text-sm"
                         style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
                       >
@@ -326,28 +355,23 @@ export default function CreateChatbotPage() {
                   </div>
                 )}
 
-                {/* API Key or Server URL */}
+                {/* API Key / Server URL */}
                 {provider && (
                   <div>
                     <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
-                      {selectedProvider?.serverUrl ? "Server URL" : "API Key"}
-                      {!selectedProvider?.serverUrl && (
-                        <span className="ml-2 text-xs" style={{ opacity: 0.5 }}>
-                          {/* Only show "leave blank" hint on settings page, not create */}
-                        </span>
-                      )}
+                      {selectedProvider?.serverUrl ? "Server URL" : "API Key *"}
                     </label>
                     <input
                       type={selectedProvider?.serverUrl ? "text" : "password"}
                       value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
+                      onChange={(e) => { setApiKey(e.target.value); setKeyError(null); }}
                       placeholder={selectedProvider?.serverUrl ? "http://localhost:11434" : "sk-..."}
                       className="w-full px-4 py-3 rounded-lg outline-none text-sm"
                       style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
                     />
                     {selectedProvider?.serverUrl && (
                       <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
-                        Leave blank to use the default (http://localhost:11434). Enter your server's URL if running remotely.
+                        Leave blank to use the default (http://localhost:11434)
                       </p>
                     )}
                   </div>
@@ -397,7 +421,7 @@ export default function CreateChatbotPage() {
                   { label: "Documents", value: `${selectedDocIds.size} selected` },
                   { label: "Provider", value: LLM_PROVIDERS.find((p) => p.id === provider)?.name },
                   { label: "Model", value: model },
-                  { label: "API Key", value: apiKey ? "••••••••" : "—" },
+                  { label: "API Key", value: apiKey ? "••••••••" : selectedProvider?.serverUrl ? "Default" : "—" },
                   { label: "Memory", value: memoryEnabled ? "Enabled" : "Disabled" },
                   { label: "Theme", value: accentPrimary },
                   { label: "Avatar", value: avatarPreview ? "Custom" : "Default" },
@@ -418,7 +442,7 @@ export default function CreateChatbotPage() {
           {/* Bottom Actions */}
           <div className="flex justify-between mt-6 pt-5 border-t" style={{ borderColor: "#715A5A40" }}>
             <button
-              onClick={() => setCurrentStep((s) => s - 1)}
+              onClick={() => { setCurrentStep((s) => s - 1); setKeyError(null); }}
               className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
               style={{
                 backgroundColor: "transparent",
@@ -433,17 +457,17 @@ export default function CreateChatbotPage() {
             </button>
             {currentStep < 4 ? (
               <button
-                onClick={() => setCurrentStep((s) => s + 1)}
-                disabled={!isStepComplete(currentStep)}
-                className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
+                onClick={handleStepNext}
+                disabled={!isStepComplete(currentStep) || validating}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
                 style={{
-                  backgroundColor: isStepComplete(currentStep) ? "#715A5A" : "#715A5A60",
+                  backgroundColor: isStepComplete(currentStep) && !validating ? "#715A5A" : "#715A5A60",
                   color: "#D3DAD9",
-                  opacity: isStepComplete(currentStep) ? 1 : 0.5,
+                  opacity: isStepComplete(currentStep) && !validating ? 1 : 0.5,
                   cursor: "pointer",
                 }}
               >
-                Next
+                {validating ? "Validating..." : "Next"}
               </button>
             ) : (
               <button

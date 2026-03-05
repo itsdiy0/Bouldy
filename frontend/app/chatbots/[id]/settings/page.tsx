@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProviderIcon from "@/components/ui/ProviderIcon";
 import BrandingPicker from "@/components/ui/BrandingPicker";
 import { Save, Check, File, Search, Loader2, ChevronLeft, Trash2 } from "lucide-react";
-import { getChatbot, updateChatbot, deleteChatbot, uploadAvatar, getDocuments, ChatbotDetail, Document } from "@/lib/api";
+import { getChatbot, updateChatbot, deleteChatbot, uploadAvatar, getDocuments, validateKey, ChatbotDetail, Document } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
 import EvaluationTab from "@/components/chatbot/EvaluationTab";
 
@@ -44,6 +44,12 @@ export default function ChatbotSettingsPage() {
 
   const [activeTab, setActiveTab] = useState<"general" | "documents" | "llm" | "evaluation">("general");
 
+  const [validating, setValidating] = useState(false);
+  const [keyError, setKeyError] = useState<string | null>(null);
+  const [originalProvider, setOriginalProvider] = useState("");
+  const [originalModel, setOriginalModel] = useState("");
+
+
   useEffect(() => {
     async function load() {
       try {
@@ -55,6 +61,8 @@ export default function ChatbotSettingsPage() {
         setDescription(chatbot.description || "");
         setProvider(chatbot.llm_provider || "");
         setModel(chatbot.llm_model || "");
+        setOriginalProvider(chatbot.llm_provider || "");
+        setOriginalModel(chatbot.llm_model || "");
         setMemoryEnabled(chatbot.memory_enabled === "true");
         setAccentPrimary(chatbot.accent_primary || "#715A5A");
         setAccentSecondary(chatbot.accent_secondary || "#2D2B33");
@@ -88,6 +96,29 @@ export default function ChatbotSettingsPage() {
     setSaving(true);
     setSaved(false);
     setError(null);
+    setKeyError(null);
+
+    // Validate if LLM config changed
+    const llmChanged = provider !== originalProvider || model !== originalModel || apiKey;
+    if (llmChanged && provider && model) {
+      setValidating(true);
+      try {
+        const result = await validateKey(provider, model, apiKey);
+        if (!result.valid) {
+          setKeyError(result.error || "Invalid credentials");
+          setValidating(false);
+          setSaving(false);
+          return;
+        }
+      } catch {
+        setKeyError("Could not validate credentials");
+        setValidating(false);
+        setSaving(false);
+        return;
+      }
+      setValidating(false);
+    }
+
     try {
       await updateChatbot(chatbotId, {
         name,
@@ -101,7 +132,6 @@ export default function ChatbotSettingsPage() {
         accent_secondary: accentSecondary,
       });
 
-      // Upload avatar if changed
       if (avatarFile) {
         try {
           await uploadAvatar(chatbotId, avatarFile);
@@ -110,6 +140,10 @@ export default function ChatbotSettingsPage() {
           setError("Saved settings but avatar upload failed");
         }
       }
+
+      // Update originals after successful save
+      setOriginalProvider(provider);
+      setOriginalModel(model);
 
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -183,12 +217,12 @@ export default function ChatbotSettingsPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving || !name.trim()}
+                disabled={saving || validating || !name.trim()}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
                 style={{
                   backgroundColor: saved ? "#10a37f" : "#715A5A",
                   color: "#D3DAD9",
-                  opacity: saving || !name.trim() ? 0.5 : 1,
+                  opacity: saving || validating || !name.trim() ? 0.5 : 1,
                 }}
               >
                 {saving ? (
@@ -198,7 +232,7 @@ export default function ChatbotSettingsPage() {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {saving ? "Saving..." : saved ? "Saved" : "Save Changes"}
+                {validating ? "Validating..." : saving ? "Saving..." : saved ? "Saved" : "Save Changes"}
               </button>
             </div>
           </div>
@@ -335,15 +369,24 @@ export default function ChatbotSettingsPage() {
               )}
 
               {/* LLM Config Tab */}
+
               {activeTab === "llm" && (
                 <div className="space-y-5">
+                  {/* Validation Error */}
+                  {keyError && (
+                    <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
+                      {keyError}
+                    </div>
+                  )}
+
+                  {/* Provider Selection */}
                   <div>
                     <label className="block text-sm mb-3" style={{ color: "#D3DAD9", opacity: 0.7 }}>Provider</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {LLM_PROVIDERS.map((p) => (
                         <button
                           key={p.id}
-                          onClick={() => { setProvider(p.id); setModel(""); }}
+                          onClick={() => { setProvider(p.id); setModel(""); setKeyError(null); }}
                           className="px-4 py-3 rounded-lg text-left transition-all flex items-center gap-3 cursor-pointer hover:brightness-110"
                           style={{
                             backgroundColor: provider === p.id ? p.bg : "#37353E",
@@ -356,73 +399,71 @@ export default function ChatbotSettingsPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Model */}
                   {provider && (
-                  <div>
-                    <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
-                      Model {selectedProvider?.customModel ? "" : "*"}
-                    </label>
-                    {selectedProvider?.customModel ? (
-                      <>
-                        <input
-                          type="text"
+                    <div>
+                      <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>Model</label>
+                      {selectedProvider?.customModel ? (
+                        <>
+                          <input
+                            type="text"
+                            value={model}
+                            onChange={(e) => { setModel(e.target.value); setKeyError(null); }}
+                            placeholder="e.g. llama3, mistral, codellama"
+                            className="w-full px-4 py-3 rounded-lg outline-none text-sm"
+                            style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
+                            list="ollama-models-settings"
+                          />
+                          <datalist id="ollama-models-settings">
+                            {selectedProvider.models.map((m) => (
+                              <option key={m} value={m} />
+                            ))}
+                          </datalist>
+                          <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
+                            Type the exact model name installed on your Ollama server
+                          </p>
+                        </>
+                      ) : (
+                        <select
                           value={model}
-                          onChange={(e) => setModel(e.target.value)}
-                          placeholder="e.g. llama3, mistral, codellama"
+                          onChange={(e) => { setModel(e.target.value); setKeyError(null); }}
                           className="w-full px-4 py-3 rounded-lg outline-none text-sm"
                           style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
-                          list="ollama-models"
-                        />
-                        <datalist id="ollama-models">
-                          {selectedProvider.models.map((m) => (
-                            <option key={m} value={m} />
+                        >
+                          <option value="">Select model</option>
+                          {selectedProvider?.models.map((m) => (
+                            <option key={m} value={m}>{m}</option>
                           ))}
-                        </datalist>
-                        <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
-                          Type the exact model name installed on your Ollama server, or pick a suggestion
-                        </p>
-                      </>
-                    ) : (
-                      <select
-                        value={model}
-                        onChange={(e) => setModel(e.target.value)}
+                        </select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* API Key / Server URL */}
+                  {provider && (
+                    <div>
+                      <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
+                        {selectedProvider?.serverUrl ? "Server URL" : "API Key"}
+                        {!selectedProvider?.serverUrl && (
+                          <span className="ml-2 text-xs" style={{ opacity: 0.5 }}>(leave blank to keep current)</span>
+                        )}
+                      </label>
+                      <input
+                        type={selectedProvider?.serverUrl ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => { setApiKey(e.target.value); setKeyError(null); }}
+                        placeholder={selectedProvider?.serverUrl ? "http://localhost:11434" : "sk-..."}
                         className="w-full px-4 py-3 rounded-lg outline-none text-sm"
                         style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
-                      >
-                        <option value="">Select model</option>
-                        {selectedProvider?.models.map((m) => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                )}
-
-                {/* API Key or Server URL */}
-                {provider && (
-                  <div>
-                    <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
-                      {selectedProvider?.serverUrl ? "Server URL" : "API Key"}
-                      {!selectedProvider?.serverUrl && (
-                        <span className="ml-2 text-xs" style={{ opacity: 0.5 }}>
-                          {/* Only show "leave blank" hint on settings page, not create */}
-                        </span>
+                      />
+                      {selectedProvider?.serverUrl && (
+                        <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
+                          Leave blank to use the default (http://localhost:11434). Enter your server's URL if running remotely.
+                        </p>
                       )}
-                    </label>
-                    <input
-                      type={selectedProvider?.serverUrl ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder={selectedProvider?.serverUrl ? "http://localhost:11434" : "sk-..."}
-                      className="w-full px-4 py-3 rounded-lg outline-none text-sm"
-                      style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
-                    />
-                    {selectedProvider?.serverUrl && (
-                      <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
-                        Leave blank to use the default (http://localhost:11434). Enter your server's URL if running remotely.
-                      </p>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
 
                   {/* Memory Toggle */}
                   <div
