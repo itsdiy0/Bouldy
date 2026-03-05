@@ -357,8 +357,31 @@ export default function ChatbotSettingsPage() {
                     </div>
                   </div>
                   {provider && (
-                    <div>
-                      <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>Model</label>
+                  <div>
+                    <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
+                      Model {selectedProvider?.customModel ? "" : "*"}
+                    </label>
+                    {selectedProvider?.customModel ? (
+                      <>
+                        <input
+                          type="text"
+                          value={model}
+                          onChange={(e) => setModel(e.target.value)}
+                          placeholder="e.g. llama3, mistral, codellama"
+                          className="w-full px-4 py-3 rounded-lg outline-none text-sm"
+                          style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
+                          list="ollama-models"
+                        />
+                        <datalist id="ollama-models">
+                          {selectedProvider.models.map((m) => (
+                            <option key={m} value={m} />
+                          ))}
+                        </datalist>
+                        <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
+                          Type the exact model name installed on your Ollama server, or pick a suggestion
+                        </p>
+                      </>
+                    ) : (
                       <select
                         value={model}
                         onChange={(e) => setModel(e.target.value)}
@@ -370,24 +393,36 @@ export default function ChatbotSettingsPage() {
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
-                    </div>
-                  )}
-                  {provider && provider !== "ollama" && (
-                    <div>
-                      <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
-                        API Key
-                        <span className="ml-2 text-xs" style={{ opacity: 0.5 }}>(leave blank to keep current)</span>
-                      </label>
-                      <input
-                        type="password"
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        placeholder="sk-..."
-                        className="w-full px-4 py-3 rounded-lg outline-none text-sm"
-                        style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
-                      />
-                    </div>
-                  )}
+                    )}
+                  </div>
+                )}
+
+                {/* API Key or Server URL */}
+                {provider && (
+                  <div>
+                    <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
+                      {selectedProvider?.serverUrl ? "Server URL" : "API Key"}
+                      {!selectedProvider?.serverUrl && (
+                        <span className="ml-2 text-xs" style={{ opacity: 0.5 }}>
+                          {/* Only show "leave blank" hint on settings page, not create */}
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type={selectedProvider?.serverUrl ? "text" : "password"}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder={selectedProvider?.serverUrl ? "http://localhost:11434" : "sk-..."}
+                      className="w-full px-4 py-3 rounded-lg outline-none text-sm"
+                      style={{ backgroundColor: "#37353E", color: "#D3DAD9", border: "1px solid #715A5A" }}
+                    />
+                    {selectedProvider?.serverUrl && (
+                      <p className="text-[11px] mt-1.5" style={{ color: "#D3DAD9", opacity: 0.3 }}>
+                        Leave blank to use the default (http://localhost:11434). Enter your server's URL if running remotely.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                   {/* Memory Toggle */}
                   <div
