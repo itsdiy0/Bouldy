@@ -43,11 +43,11 @@ export default function Sidebar() {
       <div className="p-1 border-b" style={{ borderColor: "#715A5A40" }}>
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image
-            src="/Bouldy.png"
+            src="/Bouldy.svg"
             alt="Bouldy Logo"
-            width={80}
-            height={80}
-            style={{ marginLeft: "20px", marginRight: "-15px" }}
+            width={60}
+            height={60}
+            style={{ margin:"10px 0 10px 20px" }}
           />
           <h1
             className="text-xl font-bold"
