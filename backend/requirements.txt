@@ -85,6 +85,7 @@ llama-index-indices-managed-llama-cloud==0.9.4
 llama-index-instrumentation==0.4.2
 llama-index-llms-anthropic==0.10.8
 llama-index-llms-google-genai==0.8.7
+llama-index-llms-ollama==0.9.1
 llama-index-llms-openai==0.6.18
 llama-index-readers-file==0.5.6
 llama-index-readers-llama-parse==0.5.1
@@ -103,6 +104,7 @@ nest-asyncio==1.6.0
 networkx==3.6.1
 nltk==3.9.2
 numpy==2.4.2
+ollama==0.6.1
 openai==2.20.0
 orjson==3.11.7
 ormsgpack==1.12.2
@@ -138,6 +140,7 @@ requests==2.32.5
 requests-toolbelt==1.0.0
 rich==14.3.3
 rsa==4.9.1
+ruff==0.15.4
 s3transfer==0.10.4
 scikit-network==0.33.5
 scipy==1.17.1

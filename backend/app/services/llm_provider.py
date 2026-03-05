@@ -9,6 +9,8 @@ from llama_index.llms.google_genai import GoogleGenAI
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_OLLAMA_URL = "http://host.docker.internal:11434"
+
 
 # Get LLM instance based on provider config
 def get_llm(provider: str, model: str, api_key: str | None = None) -> LLM:
@@ -48,8 +50,11 @@ def get_llm(provider: str, model: str, api_key: str | None = None) -> LLM:
 
     elif provider == "ollama":
         from llama_index.llms.ollama import Ollama
-        logger.info("Connecting to Ollama at host.docker.internal:11434")
-        return Ollama(model=model, base_url="http://host.docker.internal:11434")
+        base_url = api_key.strip() if api_key and api_key.strip() else DEFAULT_OLLAMA_URL
+        if not base_url.startswith("http"):
+            base_url = "http://" + base_url
+        logger.info(f"Connecting to Ollama at {base_url}")
+        return Ollama(model=model, base_url=base_url, context_window=4096, request_timeout=120)
 
     else:
         logger.error(f"Unsupported provider: {provider}")
