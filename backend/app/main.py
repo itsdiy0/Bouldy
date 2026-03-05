@@ -7,6 +7,7 @@ from slowapi.errors import RateLimitExceeded
 from app.routers.public import limiter
 from app.logging_config import setup_logging
 from app.config import settings
+from fastapi.staticfiles import StaticFiles
 
 setup_logging()
 
@@ -96,3 +97,5 @@ app.include_router(public.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(health.router, prefix="/api")
 app.include_router(evaluation.router, prefix="/api")
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")

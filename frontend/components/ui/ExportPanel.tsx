@@ -39,14 +39,16 @@ export default function ExportPanel({
   allow="clipboard-write"
 ></iframe>`;
 
-  const widgetCode = `<script
-  src="${baseUrl}/widget.js"
-  data-chatbot-token="${publicToken}"
-  data-primary="${accentPrimary}"
-  data-secondary="${accentSecondary}"
-  data-position="bottom-right"
-  async
-></script>`;
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+const widgetCode = `<script
+  src="${API_URL}/static/widget.js"
+  data-token="${publicToken}"
+  data-api-url="${API_URL}"
+  data-chat-url="${baseUrl}"
+  defer>
+</script>`;
 
   const handleToggle = async () => {
     setToggling(true);
@@ -228,17 +230,25 @@ export default function ExportPanel({
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-medium" style={{ color: "#D3DAD9", opacity: 0.7 }}>
                         Widget Script
-                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#715A5A40", opacity: 0.6 }}>
-                          Coming Soon
-                        </span>
                       </p>
+                      <button
+                        onClick={() => copyToClipboard(widgetCode, "embed")}
+                        className="flex items-center gap-1 text-xs cursor-pointer"
+                        style={{ color: copiedEmbed ? "#22c55e" : accentPrimary }}
+                      >
+                        {copiedEmbed ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        {copiedEmbed ? "Copied" : "Copy"}
+                      </button>
                     </div>
                     <pre
                       className="px-3 py-3 rounded-lg text-[11px] overflow-x-auto"
-                      style={{ backgroundColor: "#37353E", color: "#D3DAD9", opacity: 0.4, }}
+                      style={{ backgroundColor: "#37353E", color: "#D3DAD9", opacity: 0.7 }}
                     >
                       {widgetCode}
                     </pre>
+                    <p className="text-[10px] mt-2" style={{ color: "#D3DAD9", opacity: 0.3 }}>
+                      Paste this before the closing &lt;/body&gt; tag. A chat bubble will appear in the bottom-right corner.
+                    </p>
                   </div>
                 </div>
               )}
