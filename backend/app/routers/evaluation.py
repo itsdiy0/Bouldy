@@ -1,6 +1,7 @@
 """
 RAGAS evaluation endpoints for Bouldy
 Trigger and view RAG quality evaluations per chatbot
+Users provide their own test questions + ground truth answers
 """
 import json
 import logging
@@ -8,6 +9,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ragas import evaluate as ragas_evaluate
@@ -24,18 +26,24 @@ from app.config import settings
 from app.auth import get_current_user
 from app.services.indexing import get_embed_model
 from app.services.llm_provider import get_llm
-from app.services.question_generator import generate_test_questions
 from app.routers.chat import load_chatbot_index
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chatbots/{chatbot_id}/evaluate", tags=["evaluation"])
 
-NUM_QUESTIONS = 10
+
+class QAPair(BaseModel):
+    question: str
+    ground_truth: str
 
 
-def run_evaluation_task(chatbot_id: str, evaluation_id: str):
-    """Background task: generate questions, run RAG, score with RAGAS."""
+class StartEvaluationRequest(BaseModel):
+    qa_pairs: list[QAPair]
+
+
+def run_evaluation_task(chatbot_id: str, evaluation_id: str, qa_pairs: list[dict]):
+    """Background task: run user-provided Q&A through RAG, score with RAGAS."""
     db = SessionLocal()
     try:
         chatbot = db.query(Chatbot).filter(Chatbot.id == chatbot_id).first()
@@ -44,20 +52,7 @@ def run_evaluation_task(chatbot_id: str, evaluation_id: str):
         if not chatbot or not evaluation:
             return
 
-        # ── Step 1: Generate test questions from documents ──
-        logger.info(f"[Eval {evaluation_id}] Generating test questions...")
-        evaluation.status = "generating_questions"
-        db.commit()
-
-        qa_pairs = generate_test_questions(
-            chatbot_id=UUID(chatbot_id),
-            llm_provider=chatbot.llm_provider,
-            llm_model=chatbot.llm_model,
-            llm_api_key=chatbot.llm_api_key,
-            num_questions=NUM_QUESTIONS,
-        )
-
-        # ── Step 2: Run each question through the RAG pipeline ──
+        # ── Step 1: Run each question through the RAG pipeline ──
         logger.info(f"[Eval {evaluation_id}] Running {len(qa_pairs)} queries through RAG...")
         evaluation.status = "querying"
         db.commit()
@@ -95,7 +90,7 @@ def run_evaluation_task(chatbot_id: str, evaluation_id: str):
                 "retrieved_contexts": json.dumps(contexts),
             })
 
-        # ── Step 3: Score with RAGAS ──
+        # ── Step 2: Score with RAGAS ──
         logger.info(f"[Eval {evaluation_id}] Running RAGAS metrics...")
         evaluation.status = "scoring"
         db.commit()
@@ -114,7 +109,7 @@ def run_evaluation_task(chatbot_id: str, evaluation_id: str):
         eval_dataset = EvaluationDataset(samples=samples)
         ragas_result = ragas_evaluate(dataset=eval_dataset, metrics=metrics)
 
-        # ── Step 4: Extract per-question scores and store results ──
+        # ── Step 3: Extract per-question scores and store results ──
         logger.info(f"[Eval {evaluation_id}] Storing results...")
 
         df = ragas_result.to_pandas()
@@ -140,7 +135,7 @@ def run_evaluation_task(chatbot_id: str, evaluation_id: str):
             )
             db.add(eval_result)
 
-        # ── Step 5: Compute aggregates ──
+        # ── Step 4: Compute aggregates ──
         score_lists = {"faithfulness": [], "answer_relevancy": [], "context_precision": []}
 
         for metric_name in score_lists:
@@ -188,11 +183,12 @@ def run_evaluation_task(chatbot_id: str, evaluation_id: str):
 @router.post("")
 def start_evaluation(
     chatbot_id: UUID,
+    req: StartEvaluationRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Kick off a new evaluation run for a chatbot."""
+    """Kick off a new evaluation run with user-provided Q&A pairs."""
     chatbot = db.query(Chatbot).filter(
         Chatbot.id == chatbot_id,
         Chatbot.user_id == current_user.id,
@@ -204,26 +200,31 @@ def start_evaluation(
         raise HTTPException(400, "Chatbot LLM not configured")
     if not chatbot.documents:
         raise HTTPException(400, "Chatbot has no documents")
+    if not req.qa_pairs or len(req.qa_pairs) == 0:
+        raise HTTPException(400, "At least one question-answer pair is required")
 
     # Prevent concurrent evaluations
     running = db.query(Evaluation).filter(
         Evaluation.chatbot_id == chatbot_id,
-        Evaluation.status.in_(["running", "generating_questions", "querying", "scoring"]),
+        Evaluation.status.in_(["running", "querying", "scoring"]),
     ).first()
     if running:
         raise HTTPException(400, "An evaluation is already running for this chatbot")
 
     evaluation = Evaluation(
         chatbot_id=chatbot_id,
-        question_count=NUM_QUESTIONS,
+        question_count=len(req.qa_pairs),
         status="running",
     )
     db.add(evaluation)
     db.commit()
     db.refresh(evaluation)
 
-    background_tasks.add_task(run_evaluation_task, str(chatbot_id), str(evaluation.id))
-    logger.info(f"Started evaluation {evaluation.id} for chatbot {chatbot_id}")
+    # Convert to dicts for the background task
+    qa_dicts = [{"question": qa.question, "ground_truth": qa.ground_truth} for qa in req.qa_pairs]
+
+    background_tasks.add_task(run_evaluation_task, str(chatbot_id), str(evaluation.id), qa_dicts)
+    logger.info(f"Started evaluation {evaluation.id} for chatbot {chatbot_id} with {len(qa_dicts)} questions")
 
     return {
         "id": str(evaluation.id),
@@ -346,7 +347,7 @@ def delete_evaluation(
     if not evaluation:
         raise HTTPException(404, "Evaluation not found")
 
-    db.delete(evaluation)  # cascade deletes results
+    db.delete(evaluation)
     db.commit()
 
     return {"detail": "Evaluation deleted"}

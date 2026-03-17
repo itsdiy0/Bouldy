@@ -294,11 +294,12 @@ export async function togglePublish(chatbotId: string): Promise<{ is_public: str
   return res.json();
 }
 
-export async function startEvaluation(chatbotId: string): Promise<any> {
+export async function startEvaluation(chatbotId: string, qaPairs: { question: string; ground_truth: string }[]): Promise<any> {
   const headers = await getAuthHeaders();
   const res = await fetch(`${API_URL}/api/chatbots/${chatbotId}/evaluate`, {
     method: "POST",
-    headers,
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ qa_pairs: qaPairs }),
   });
   if (!res.ok) {
     const err = await res.json();
