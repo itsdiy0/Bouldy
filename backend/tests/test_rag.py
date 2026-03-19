@@ -361,7 +361,8 @@ class TestEvaluationEndpoints:
         db.refresh(chatbot)
         return str(chatbot.id)
 
-    def test_start_evaluation(self, client, auth_headers, db):
+    @patch("app.routers.evaluation.run_evaluation_task")
+    def test_start_evaluation(self, mock_eval_task, client, auth_headers, db):
         """Starting an evaluation creates a run and returns 200."""
         bot_id = self._create_chatbot_with_docs(client, auth_headers, db)
 
@@ -431,7 +432,8 @@ class TestEvaluationEndpoints:
         assert res.status_code == 200
         assert res.json() == []
 
-    def test_list_evaluations(self, client, auth_headers, db):
+    @patch("app.routers.evaluation.run_evaluation_task")
+    def test_list_evaluations(self, mock_eval_task, client, auth_headers, db):
         """List evaluations returns runs after creating one."""
         bot_id = self._create_chatbot_with_docs(client, auth_headers, db)
 
@@ -448,7 +450,8 @@ class TestEvaluationEndpoints:
         assert res.status_code == 200
         assert len(res.json()) == 1
 
-    def test_get_evaluation_detail(self, client, auth_headers, db):
+    @patch("app.routers.evaluation.run_evaluation_task")
+    def test_get_evaluation_detail(self, mock_eval_task, client, auth_headers, db):
         """Get evaluation detail returns run with results."""
         bot_id = self._create_chatbot_with_docs(client, auth_headers, db)
 
@@ -475,7 +478,8 @@ class TestEvaluationEndpoints:
         res = client.get(f"/api/chatbots/{bot_id}/evaluate/{fake_id}", headers=auth_headers)
         assert res.status_code == 404
 
-    def test_delete_evaluation(self, client, auth_headers, db):
+    @patch("app.routers.evaluation.run_evaluation_task")
+    def test_delete_evaluation(self, mock_eval_task, client, auth_headers, db):
         """Delete evaluation removes the run."""
         bot_id = self._create_chatbot_with_docs(client, auth_headers, db)
 
