@@ -83,7 +83,7 @@ def cache_response(chatbot_id: str, query: str, response: str, sources: list) ->
         query_embedding = get_query_embedding(query)
 
         # Use hash of query as key
-        query_hash = hashlib.md5(query.encode()).hexdigest()[:12]
+        query_hash = hashlib.md5(query.encode(), usedforsecurity=False).hexdigest()[:12]
         key = f"{prefix}:{query_hash}"
 
         data = {
