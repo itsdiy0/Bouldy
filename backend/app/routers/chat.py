@@ -23,6 +23,7 @@ from app.auth import get_current_user
 from app.services.indexing import get_qdrant_client, get_embed_model, get_collection_name
 from app.services.llm_provider import get_llm
 from app.services.cache import get_cached_response, cache_response
+from app.services.encryption import decrypt
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +191,8 @@ def chat(
     except ValueError as e:
         raise HTTPException(400, str(e))
 
-    llm = get_llm(chatbot.llm_provider, chatbot.llm_model, chatbot.llm_api_key)
+    api_key = decrypt(chatbot.llm_api_key) if chatbot.llm_api_key else None
+    llm = get_llm(chatbot.llm_provider, chatbot.llm_model, api_key)
 
     # Build query with optional memory
     if chatbot.memory_enabled == "true":
@@ -273,7 +275,8 @@ def chat_stream(
     except ValueError as e:
         raise HTTPException(400, str(e))
 
-    llm = get_llm(chatbot.llm_provider, chatbot.llm_model, chatbot.llm_api_key)
+    api_key = decrypt(chatbot.llm_api_key) if chatbot.llm_api_key else None
+    llm = get_llm(chatbot.llm_provider, chatbot.llm_model, api_key)
 
     # Build query with optional memory
     use_memory = chatbot.memory_enabled == "true"

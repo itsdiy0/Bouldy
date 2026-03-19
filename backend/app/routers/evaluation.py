@@ -27,6 +27,7 @@ from app.auth import get_current_user
 from app.services.indexing import get_embed_model
 from app.services.llm_provider import get_llm
 from app.routers.chat import load_chatbot_index
+from app.services.encryption import decrypt
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +60,9 @@ def run_evaluation_task(chatbot_id: str, evaluation_id: str, qa_pairs: list[dict
 
         embed_model = get_embed_model()
         index = load_chatbot_index(UUID(chatbot_id))
+        api_key = decrypt(chatbot.llm_api_key) if chatbot.llm_api_key else None
         query_engine = index.as_query_engine(
-            llm=get_llm(chatbot.llm_provider, chatbot.llm_model, chatbot.llm_api_key),
+            llm=get_llm(chatbot.llm_provider, chatbot.llm_model, api_key),
             similarity_top_k=3,
         )
 

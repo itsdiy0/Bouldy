@@ -113,6 +113,34 @@ class TestCryptographicFailures:
         assert "password" not in data
         assert "password_hash" not in data
 
+    def test_encrypt_decrypt_roundtrip(self):
+        """Encryption and decryption produce the original value."""
+        from app.services.encryption import encrypt, decrypt
+        original = "sk-test-key-12345"
+        encrypted = encrypt(original)
+        assert encrypted != original
+        assert decrypt(encrypted) == original
+
+    def test_encrypted_key_not_plaintext_in_db(self, client, auth_headers, db):
+        """LLM API key stored in DB is encrypted, not plaintext."""
+        from app.models import Chatbot
+        client.post("/api/chatbots", headers=auth_headers, json={
+            "name": "Encrypted Bot",
+            "llm_provider": "openai",
+            "llm_model": "gpt-4",
+            "api_key": "sk-plaintext-secret",
+        })
+        bot = db.query(Chatbot).filter(Chatbot.name == "Encrypted Bot").first()
+        assert bot is not None
+        assert bot.llm_api_key != "sk-plaintext-secret"
+        assert bot.llm_api_key is not None
+
+    def test_legacy_plaintext_decrypt_fallback(self):
+        """Decrypting a non-encrypted value returns it as-is (legacy support)."""
+        from app.services.encryption import decrypt
+        legacy = "sk-old-plaintext-key"
+        assert decrypt(legacy) == legacy
+
 
 # ──────────────────────────────────────────────
 #  A03:2021 — Injection

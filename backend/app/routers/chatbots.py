@@ -15,7 +15,7 @@ from fastapi.responses import Response
 from app.storage import get_file as get_s3_file
 from app.services.cache import clear_chatbot_cache
 from pydantic import BaseModel
-
+from app.services.encryption import encrypt
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ def create_chatbot(
         description=data.description,
         llm_provider=data.llm_provider,
         llm_model=data.llm_model,
-        llm_api_key=data.api_key,
+        llm_api_key=encrypt(data.api_key) if data.api_key else None,
         public_token=secrets.token_urlsafe(32),
         accent_primary=data.accent_primary or "#715A5A",
         accent_secondary=data.accent_secondary or "#2D2B33",
@@ -164,7 +164,7 @@ def update_chatbot(
     if data.llm_model is not None:
         chatbot.llm_model = data.llm_model
     if data.api_key is not None:
-        chatbot.llm_api_key = data.api_key
+        chatbot.llm_api_key = encrypt(data.api_key) if data.api_key else None
     if data.memory_enabled is not None:
         chatbot.memory_enabled = data.memory_enabled
     if data.accent_primary is not None:
