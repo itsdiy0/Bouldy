@@ -160,7 +160,6 @@ class TestInjection:
             files={"file": ("../../etc/passwd", b"evil", "application/pdf")},
         )
         assert res.status_code == 200
-        data = res.json()
         # S3 key uses UUID, not the original filename
         assert "../../" not in mock_upload.call_args[0][1]
 
