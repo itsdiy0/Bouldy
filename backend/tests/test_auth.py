@@ -5,7 +5,6 @@ auth middleware (X-User-Id header), and edge cases.
 """
 
 import uuid
-from app.models import User
 
 
 # ──────────────────────────────────────────────

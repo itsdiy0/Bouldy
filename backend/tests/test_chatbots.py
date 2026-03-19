@@ -8,7 +8,6 @@ External services (S3, Qdrant, LLM providers, Redis) are mocked.
 import uuid
 from unittest.mock import patch, MagicMock
 
-from app.models import Chatbot, Document
 
 
 # ──────────────────────────────────────────────

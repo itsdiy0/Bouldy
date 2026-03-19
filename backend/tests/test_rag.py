@@ -8,9 +8,8 @@ All external services (Qdrant, OpenAI, Redis, S3, LLMs) are mocked.
 import uuid
 import json
 from unittest.mock import patch, MagicMock
-from datetime import datetime
 
-from app.models import Chatbot, Document, Evaluation, EvaluationResult
+from app.models import Chatbot, Document
 from app.services.indexing import (
     parse_pdf_pages, parse_txt, get_collection_name,
 )
@@ -216,7 +215,7 @@ class TestChatHelpers:
 
     def test_extract_sources_filters_low_scores(self):
         """Sources below threshold are excluded."""
-        from app.routers.chat import extract_sources, RELEVANCE_THRESHOLD
+        from app.routers.chat import extract_sources
 
         low = MagicMock()
         low.score = 0.1
@@ -329,7 +328,6 @@ class TestEvaluationEndpoints:
 
     def _create_chatbot_with_docs(self, client, auth_headers, db):
         """Helper: create a chatbot with a document attached."""
-        from app.models import Document, Chatbot
         import uuid as uuid_mod
 
         # Get user UUID as a proper UUID object (SQLite needs this)

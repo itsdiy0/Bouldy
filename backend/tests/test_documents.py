@@ -5,10 +5,8 @@ S3/MinIO calls are mocked throughout.
 """
 
 import uuid
-from unittest.mock import patch, MagicMock
-from io import BytesIO
+from unittest.mock import patch
 
-from app.models import Document
 
 
 # ──────────────────────────────────────────────

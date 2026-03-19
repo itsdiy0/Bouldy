@@ -4,7 +4,6 @@ End-to-end flows testing multiple endpoints together
 to verify the full user journey works correctly.
 """
 
-import uuid
 from unittest.mock import patch, MagicMock
 
 
