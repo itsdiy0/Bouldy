@@ -1,0 +1,7 @@
+aws_region           = "eu-west-2"
+environment          = "production"
+db_password          = "change-me-strong-password"
+secret_key           = "generate-a-strong-random-key"
+nextauth_secret      = "generate-another-strong-key"
+openai_embedding_key = "sk-your-openai-key"
+domain_name          = "bouldy-aws.diy0.dev"
