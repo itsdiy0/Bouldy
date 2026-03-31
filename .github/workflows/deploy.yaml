@@ -101,7 +101,7 @@ jobs:
 
           scp -o StrictHostKeyChecking=no \
               -o ProxyCommand="cloudflared access ssh --hostname %h" \
-              K8s/backend.yaml \
+              infrastructure/K8s/backend.yaml \
               ${{ secrets.HOMELAB_USER }}@${{ secrets.HOMELAB_HOST }}:~/backend.yaml
 
           ssh -o StrictHostKeyChecking=no \
