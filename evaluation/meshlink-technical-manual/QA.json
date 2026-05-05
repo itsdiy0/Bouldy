@@ -1,0 +1,42 @@
+[
+    {
+      "question": "What are the minimum hardware requirements for MeshLink Server?",
+      "ground_truth": "A minimum of 4 CPU cores, 8 GB of RAM, and 50 GB of available disk space on the control plane host."
+    },
+    {
+      "question": "Which network port serves the administrative HTTPS API and the web console?",
+      "ground_truth": "Port 8443 serves the administrative HTTPS API and the web console."
+    },
+    {
+      "question": "Which versions of PostgreSQL are required, and is SQLite supported in production?",
+      "ground_truth": "PostgreSQL 14 or later is required. SQLite is supported only for single-node evaluation deployments and must not be used in production."
+    },
+    {
+      "question": "How is the bootstrap token generated and how soon must it be rotated?",
+      "ground_truth": "The bootstrap token must be a cryptographically random value of at least 32 bytes, base64 encoded. It must be rotated within 24 hours of the initial cluster join."
+    },
+    {
+      "question": "What is the minimum cluster size for high availability and why are two-node clusters not supported?",
+      "ground_truth": "The minimum production cluster size is three nodes. Two-node clusters are not supported because they cannot maintain quorum in the event of a single node failure."
+    },
+    {
+      "question": "How are MeshLink Server backups encrypted, and what destinations does the backup utility support?",
+      "ground_truth": "Backups are encrypted with AES-256-GCM using a key derived from the configured backup passphrase. Supported destinations include local file paths, S3-compatible URLs, and SFTP endpoints."
+    },
+    {
+      "question": "What password hashing algorithm and parameters does local authentication use?",
+      "ground_truth": "Local authentication uses Argon2id with default parameters of 64 MB memory cost, 3 iterations, and 4 parallel lanes."
+    },
+    {
+      "question": "How are ACME certificates renewed and what happens if renewal fails?",
+      "ground_truth": "Certificates are renewed automatically when fewer than 30 days remain before expiry. If renewal fails, an alert is raised through the configured notification channel."
+    },
+    {
+      "question": "What does the diagnostic bundle contain, and what does it deliberately exclude?",
+      "ground_truth": "The bundle contains configuration files with secrets redacted, the most recent 24 hours of logs, the current cluster topology, and database schema version information. It does not include audit logs or backup artefacts."
+    },
+    {
+      "question": "What are the four built-in RBAC roles and their key distinctions?",
+      "ground_truth": "Viewer (read-only access), Operator (read and operational actions but no configuration changes), Administrator (full access except user management), and Owner (full access including user and role management)."
+    }
+  ]

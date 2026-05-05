@@ -1,0 +1,42 @@
+[
+    {
+      "question": "What was the average modal share growth for high-investment cities in the study?",
+      "ground_truth": "An average modal share increase of 4.2 percentage points, with a 95% confidence interval of 3.1 to 5.3."
+    },
+    {
+      "question": "Which four cities were classified as high-investment in the study?",
+      "ground_truth": "Copenhagen, Paris, Seville, and Bordeaux."
+    },
+    {
+      "question": "What infrastructure density threshold did the authors identify as critical for compounding cycling adoption gains?",
+      "ground_truth": "Approximately 50 kilometres of protected cycle lane per 100,000 residents."
+    },
+    {
+      "question": "How did Paris's modal share and cycle lane density change over the study period?",
+      "ground_truth": "Paris increased protected cycle lane kilometres from 18 to 84 per 100,000 residents, and cycling modal share rose from 3 percent to 11.2 percent between 2014 and 2024."
+    },
+    {
+      "question": "Why did London's high absolute spending fail to produce significant modal share growth?",
+      "ground_truth": "Although London spent heavily in nominal terms, that spending represented less than 2 percent of London's much larger total transport budget, so the proportional commitment was insufficient. London's modal share moved only from 2.1 percent to 3.2 percent."
+    },
+    {
+      "question": "What effect did topographic gradient have on modal share gains?",
+      "ground_truth": "Cities with average gradients above 4 percent exhibited modal share gains 1.3 percentage points lower than otherwise comparable cities, holding investment intensity constant."
+    },
+    {
+      "question": "What policy implication did the authors draw from the non-linear network effect?",
+      "ground_truth": "Cities seeking to grow cycling modal share should aim for concentrated investment over a defined period rather than dispersed incremental spending, as incremental investment that fails to cross the density threshold produces disappointing returns and risks a self-reinforcing low-equilibrium trap."
+    },
+    {
+      "question": "Why do the authors argue proportional commitment is a better predictor than absolute spending?",
+      "ground_truth": "Because absolute spending is misleading when comparing cities of different sizes. London ranked among the highest absolute spenders but had insufficient proportional commitment to drive meaningful growth, while smaller cities like Seville achieved strong growth through high proportional commitment."
+    },
+    {
+      "question": "What are the main limitations the authors acknowledge in their study?",
+      "ground_truth": "Differences in household travel survey methodology across cities causing residual measurement error, capital expenditure data not capturing operating expenditure on maintenance and behavioural change campaigns, the ten-year window being too short to capture full effects of late investments, and the European-only sample limiting generalisability to other contexts."
+    },
+    {
+      "question": "What were the average modal share gains for medium-investment and low-investment cities, and which cities fell into each category?",
+      "ground_truth": "Medium-investment cities (Amsterdam, Helsinki, Lyon, and Munich) averaged 2.1 percentage points (95% CI: 1.4 to 2.8). Low-investment cities (London, Berlin, Rome, and Madrid) averaged 0.8 percentage points (95% CI: 0.2 to 1.4)."
+    }
+  ]

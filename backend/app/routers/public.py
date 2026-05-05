@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-
+from app.services.encryption import decrypt 
 
 from app.database import get_db
 from app.models import Chatbot
@@ -93,7 +93,8 @@ def public_chat(
         raise HTTPException(400, str(e))
 
     # 3. Get LLM using chatbot's stored API key
-    llm = get_llm(chatbot.llm_provider, chatbot.llm_model, chatbot.llm_api_key)
+    api_key = decrypt(chatbot.llm_api_key) if chatbot.llm_api_key else None
+    llm = get_llm(chatbot.llm_provider, chatbot.llm_model, api_key)
 
     # 4. Query (no memory for public chats — stateless)
     query_engine = index.as_query_engine(

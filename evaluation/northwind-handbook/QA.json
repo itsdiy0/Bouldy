@@ -1,0 +1,42 @@
+[
+    {
+      "question": "What is the standard working week at Northwind?",
+      "ground_truth": "The standard working week is 37.5 hours, distributed across Monday to Friday."
+    },
+    {
+      "question": "How much is the home office allowance and when must employees claim it?",
+      "ground_truth": "A one-time allowance of £350, claimable by submitting receipts to the Operations team within 60 days of the start date."
+    },
+    {
+      "question": "What are Northwind's core working hours?",
+      "ground_truth": "Core hours are 10:00 to 16:00 GMT."
+    },
+    {
+      "question": "How many days per week must employees attend the London office, and which day is the company-wide in-office day?",
+      "ground_truth": "Employees must attend the London office on a minimum of two days per week. Tuesdays are designated as the company-wide in-office day."
+    },
+    {
+      "question": "What is the parental leave entitlement for primary caregivers, and what is the eligibility requirement?",
+      "ground_truth": "Primary caregivers are entitled to 26 weeks at full pay followed by 13 weeks at the statutory rate. Eligibility requires a minimum of 12 months of continuous service at the expected date of leave commencement."
+    },
+    {
+      "question": "How are business expenses over £100 handled, and what is the submission deadline?",
+      "ground_truth": "Expenses over £100 require pre-approval from the employee's line manager and must be submitted via the Concur expense system within 30 days of the expense being incurred."
+    },
+    {
+      "question": "What encryption standards apply to Restricted data at rest and in transit?",
+      "ground_truth": "Restricted data at rest must be encrypted using AES-256, and all transmission must occur over TLS 1.3."
+    },
+    {
+      "question": "How quickly must security incidents be reported, and through what channels?",
+      "ground_truth": "Security incidents must be reported within one hour of discovery, via the dedicated incident hotline at extension 4747 or by email to security@northwind-analytics.example."
+    },
+    {
+      "question": "What learning and development support does Northwind provide, and does the budget roll over?",
+      "ground_truth": "Northwind provides a £500 annual learning and development budget for online courses, books, conference tickets, or certification fees. The budget does not roll over between calendar years. Conference travel is funded separately through the standard expense process when approved by the line manager."
+    },
+    {
+      "question": "What ratings can a performance review produce, and what happens to employees rated Below Expectations?",
+      "ground_truth": "Reviews produce one of five ratings: Below Expectations, Meeting Some Expectations, Meeting Expectations, Exceeding Expectations, and Outstanding. Employees rated Below Expectations enter a structured Performance Improvement Plan with defined milestones over a 90-day period."
+    }
+  ]
