@@ -1,6 +1,4 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 from app.routers import auth, documents, chatbots, chat, sessions, public, dashboard, health,evaluation
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
