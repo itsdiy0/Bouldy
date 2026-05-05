@@ -25,7 +25,8 @@ export default function ExportPanel({
 }: ExportPanelProps) {
   const [toggling, setToggling] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedEmbed, setCopiedEmbed] = useState(false);
+  const [copiedIframe, setCopiedIframe] = useState(false);
+  const [copiedWidget, setCopiedWidget] = useState(false);
   const [activeTab, setActiveTab] = useState<"link" | "embed">("link");
 
   const published = isPublic === "true";
@@ -40,9 +41,9 @@ export default function ExportPanel({
 ></iframe>`;
 
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-const widgetCode = `<script
+  const widgetCode = `<script
   src="${API_URL}/static/widget.js"
   data-token="${publicToken}"
   data-api-url="${API_URL}"
@@ -59,14 +60,17 @@ const widgetCode = `<script
     finally { setToggling(false); }
   };
 
-  const copyToClipboard = async (text: string, type: "link" | "embed") => {
+  const copyToClipboard = async (text: string, type: "link" | "iframe" | "widget") => {
     await navigator.clipboard.writeText(text);
     if (type === "link") {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
+    } else if (type === "iframe") {
+      setCopiedIframe(true);
+      setTimeout(() => setCopiedIframe(false), 2000);
     } else {
-      setCopiedEmbed(true);
-      setTimeout(() => setCopiedEmbed(false), 2000);
+      setCopiedWidget(true);
+      setTimeout(() => setCopiedWidget(false), 2000);
     }
   };
 
@@ -74,7 +78,7 @@ const widgetCode = `<script
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "#00000080" }}>
       <div
         className="rounded-xl w-full max-w-lg mx-4 overflow-hidden"
-        style={{ backgroundColor: "#2D2B33"}}
+        style={{ backgroundColor: "#2D2B33" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #715A5A30" }}>
@@ -95,7 +99,7 @@ const widgetCode = `<script
           {/* Publish Toggle */}
           <div
             className="flex items-center justify-between px-4 py-4 rounded-lg"
-            style={{ backgroundColor: "#37353E"}}
+            style={{ backgroundColor: "#37353E" }}
           >
             <div className="flex items-center gap-3">
               <div
@@ -209,12 +213,12 @@ const widgetCode = `<script
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-medium" style={{ color: "#D3DAD9", opacity: 0.7 }}>iframe Embed</p>
                       <button
-                        onClick={() => copyToClipboard(embedCode, "embed")}
+                        onClick={() => copyToClipboard(embedCode, "iframe")}
                         className="flex items-center gap-1 text-xs cursor-pointer"
-                        style={{ color: copiedEmbed ? "#22c55e" : accentPrimary }}
+                        style={{ color: copiedIframe ? "#22c55e" : accentPrimary }}
                       >
-                        {copiedEmbed ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                        {copiedEmbed ? "Copied" : "Copy"}
+                        {copiedIframe ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        {copiedIframe ? "Copied" : "Copy"}
                       </button>
                     </div>
                     <pre
@@ -232,12 +236,12 @@ const widgetCode = `<script
                         Widget Script
                       </p>
                       <button
-                        onClick={() => copyToClipboard(widgetCode, "embed")}
+                        onClick={() => copyToClipboard(widgetCode, "widget")}
                         className="flex items-center gap-1 text-xs cursor-pointer"
-                        style={{ color: copiedEmbed ? "#22c55e" : accentPrimary }}
+                        style={{ color: copiedWidget ? "#22c55e" : accentPrimary }}
                       >
-                        {copiedEmbed ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                        {copiedEmbed ? "Copied" : "Copy"}
+                        {copiedWidget ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        {copiedWidget ? "Copied" : "Copy"}
                       </button>
                     </div>
                     <pre
