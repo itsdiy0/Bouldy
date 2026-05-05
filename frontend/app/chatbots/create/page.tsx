@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Check, File, Bot, Settings, Sparkles, BotIcon, Search } from "lucide-react";
+import { Check, File, Bot, Settings, Sparkles, BotIcon, Search, Upload } from "lucide-react";
 import ProviderIcon from "@/components/ui/ProviderIcon";
 import { getDocuments, createChatbot, uploadAvatar, validateKey, Document, CreateChatbotData } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
 import BrandingPicker from "@/components/ui/BrandingPicker";
+import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
 
 const STEPS = [
   { id: 1, name: "Basics", icon: Bot },
@@ -39,6 +40,7 @@ export default function CreateChatbotPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
   const [keyError, setKeyError] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
     async function fetchDocs() {
@@ -240,9 +242,19 @@ export default function CreateChatbotPage() {
                       style={{ color: "#D3DAD9" }}
                     />
                   </div>
-                  <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.6 }}>
-                    {selectedDocIds.size} of {documents.length} selected
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowUploadModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:brightness-110"
+                      style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      Upload New
+                    </button>
+                    <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.6 }}>
+                      {selectedDocIds.size} of {documents.length} selected
+                    </span>
+                  </div>
                 </div>
                 {loadingDocs ? (
                   <p className="text-sm" style={{ color: "#D3DAD9", opacity: 0.6 }}>Loading...</p>
@@ -250,7 +262,11 @@ export default function CreateChatbotPage() {
                   <div className="text-center py-12">
                     <File className="w-12 h-12 mx-auto mb-3" style={{ color: "#D3DAD9", opacity: 0.3 }} />
                     <p className="text-sm" style={{ color: "#D3DAD9", opacity: 0.6 }}>No documents uploaded</p>
-                    <button onClick={() => router.push("/documents")} className="mt-3 px-4 py-2 rounded-lg text-sm cursor-pointer" style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}>
+                    <button
+                      onClick={() => setShowUploadModal(true)}
+                      className="mt-3 px-4 py-2 rounded-lg text-sm cursor-pointer"
+                      style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
+                    >
                       Upload Documents
                     </button>
                   </div>
@@ -488,6 +504,17 @@ export default function CreateChatbotPage() {
           </div>
         </div>
       </div>
+
+      {/* Upload Document Modal */}
+      {showUploadModal && (
+        <UploadDocumentModal
+          onClose={() => setShowUploadModal(false)}
+          onUploaded={(doc) => {
+            setDocuments((prev) => [doc, ...prev]);
+            setSelectedDocIds((prev) => new Set([...prev, doc.id]));
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }

@@ -5,10 +5,11 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProviderIcon from "@/components/ui/ProviderIcon";
 import BrandingPicker from "@/components/ui/BrandingPicker";
-import { Save, Check, File, Search, Loader2, ChevronLeft, Trash2 } from "lucide-react";
+import { Save, Check, File, Search, Loader2, ChevronLeft, Trash2, Upload } from "lucide-react";
 import { getChatbot, updateChatbot, deleteChatbot, uploadAvatar, getDocuments, validateKey, ChatbotDetail, Document } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
 import EvaluationTab from "@/components/chatbot/EvaluationTab";
+import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
 
 const fileTypeColors: Record<string, string> = { pdf: "#ef4444", docx: "#3b82f6", txt: "#9ca3af" };
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -26,6 +27,7 @@ export default function ChatbotSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -322,16 +324,26 @@ export default function ChatbotSettingsPage() {
                         style={{ color: "#D3DAD9" }}
                       />
                     </div>
-                    <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
-                      {selectedDocIds.size} of {allDocs.length} selected
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:brightness-110"
+                        style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        Upload New
+                      </button>
+                      <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
+                        {selectedDocIds.size} of {allDocs.length} selected
+                      </span>
+                    </div>
                   </div>
                   {allDocs.length === 0 ? (
                     <div className="text-center py-12">
                       <File className="w-12 h-12 mx-auto mb-3" style={{ color: "#D3DAD9", opacity: 0.2 }} />
                       <p className="text-sm mb-4" style={{ color: "#D3DAD9", opacity: 0.5 }}>No documents uploaded yet</p>
                       <button
-                        onClick={() => router.push("/documents")}
+                        onClick={() => setShowUploadModal(true)}
                         className="px-4 py-2 rounded-lg text-sm cursor-pointer"
                         style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
                       >
@@ -508,6 +520,17 @@ export default function ChatbotSettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Upload Document Modal */}
+      {showUploadModal && (
+        <UploadDocumentModal
+          onClose={() => setShowUploadModal(false)}
+          onUploaded={(doc) => {
+            setAllDocs((prev) => [doc, ...prev]);
+            setSelectedDocIds((prev) => new Set([...prev, doc.id]));
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
