@@ -1,14 +1,16 @@
 import uuid
 import logging
+import io
 
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
-
+from fastapi.responses import StreamingResponse
 from app.database import get_db
 from app.models import Document, User
 from app.schemas import DocumentResponse, DocumentListResponse
-from app.storage import upload_file, delete_file
+from app.storage import upload_file, delete_file, get_file
 from app.auth import get_current_user
+
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,43 @@ def list_documents(
     documents = db.query(Document).filter(Document.user_id == current_user.id).order_by(Document.created_at.desc()).all()
     return DocumentListResponse(documents=documents, total=len(documents))
 
+# Download a document
+@router.get("/{document_id}/download")
+def download_document(
+    document_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    document = db.query(Document).filter(
+        Document.id == document_id,
+        Document.user_id == current_user.id,
+    ).first()
+
+    if not document:
+        raise HTTPException(404, "Document not found")
+
+    try:
+        file_content = get_file(document.s3_key)
+    except Exception:
+        logger.error(f"Download failed for {document_id} (s3_key={document.s3_key})")
+        raise HTTPException(500, "Failed to retrieve file from storage")
+
+    content_type_map = {
+        "pdf": "application/pdf",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "txt": "text/plain",
+    }
+    content_type = content_type_map.get(document.file_type, "application/octet-stream")
+
+    logger.info(f"Document downloaded: {document.original_filename} ({document_id}) by user {current_user.id}")
+
+    return StreamingResponse(
+        io.BytesIO(file_content),
+        media_type=content_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{document.original_filename}"',
+        },
+    )
 
 # Delete a document
 @router.delete("/{document_id}")

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Upload, FileText, Trash2, Grid, List, AlertCircle, File, Bot, Check } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { getDocuments, uploadDocument, deleteDocument, Document } from "@/lib/api";
+import { Upload, FileText, Trash2, Grid, List, AlertCircle, File, Bot, Check, Download } from "lucide-react";
+import { getDocuments, uploadDocument, deleteDocument, downloadDocument, Document } from "@/lib/api";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -83,6 +83,18 @@ export default function DocumentsPage() {
       await fetchDocuments();
     } catch {
       setError("Failed to delete documents");
+    }
+  };
+
+  const handleDownload = async () => {
+    if (selectedIds.size === 0) return;
+    try {
+      for (const id of selectedIds) {
+        const doc = documents.find((d) => d.id === id);
+        if (doc) await downloadDocument(id, doc.original_filename);
+      }
+    } catch {
+      setError("Failed to download document");
     }
   };
 
@@ -176,6 +188,16 @@ export default function DocumentsPage() {
                     (⌘+click for multiple)
                   </span>
                 )}
+                <button
+  onClick={handleDownload}
+  className="flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors"
+  style={{ color: "#D3DAD9" }}
+  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#715A5A")}
+  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+>
+  <Download className="w-3 h-3" />
+  Download
+</button>
                 <button
                   onClick={handleDelete}
                   className="flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors hover:bg-red-500/20"

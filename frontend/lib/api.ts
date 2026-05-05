@@ -339,3 +339,22 @@ export async function validateKey(provider: string, model: string, apiKey?: stri
   if (!res.ok) throw new Error("Validation request failed");
   return res.json();
 }
+
+export async function downloadDocument(id: string, filename: string): Promise<void> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/api/documents/${id}/download`, { headers });
+
+  if (!res.ok) {
+    throw new Error("Failed to download document");
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
