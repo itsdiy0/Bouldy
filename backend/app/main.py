@@ -8,6 +8,8 @@ from app.routers.public import limiter
 from app.logging_config import setup_logging
 from app.config import settings
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 setup_logging()
 
@@ -77,13 +79,47 @@ Public endpoints (`/api/public/*`) require no authentication.
     ],
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins.split(","),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS configuration
+# - /api/public/* endpoints accept any origin (widget embeds on third-party sites)
+# - All other endpoints use the configured allowlist
+PUBLIC_PATH_PREFIX = "/api/public"
+allowed_origins_list = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
+
+
+class ScopedCORSMiddleware(BaseHTTPMiddleware):
+    """Apply wildcard CORS to public endpoints, allowlist to everything else."""
+
+    async def dispatch(self, request, call_next):
+        origin = request.headers.get("origin")
+        is_public_path = request.url.path.startswith(PUBLIC_PATH_PREFIX)
+
+        # Handle CORS preflight
+        if request.method == "OPTIONS":
+            response = Response(status_code=200)
+        else:
+            response = await call_next(request)
+
+        if origin:
+            if is_public_path:
+                # Public endpoints: allow any origin (widget embed support)
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Vary"] = "Origin"
+            elif origin in allowed_origins_list or "*" in allowed_origins_list:
+                # Authenticated endpoints: strict allowlist
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+                response.headers["Vary"] = "Origin"
+
+        if request.method == "OPTIONS":
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            if not is_public_path:
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+
+        return response
+
+
+app.add_middleware(ScopedCORSMiddleware)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
