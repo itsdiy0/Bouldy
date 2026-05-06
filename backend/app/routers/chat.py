@@ -191,9 +191,12 @@ def chat(
     except ValueError as e:
         raise HTTPException(400, str(e))
 
-    api_key = decrypt(chatbot.llm_api_key) if chatbot.llm_api_key else None
+    raw_key = chatbot.llm_api_key
+    logger.warning(f"AUTH_DEBUG chatbot_id={chatbot.id} raw_key_prefix={raw_key[:15] if raw_key else None!r} raw_len={len(raw_key) if raw_key else 0}")
+    api_key = decrypt(raw_key) if raw_key else None
+    logger.warning(f"AUTH_DEBUG decrypted_prefix={api_key[:15] if api_key else None!r} decrypted_len={len(api_key) if api_key else 0}")
     llm = get_llm(chatbot.llm_provider, chatbot.llm_model, api_key)
-
+    
     # Build query with optional memory
     if chatbot.memory_enabled == "true":
         chat_history = get_chat_history(session, db)

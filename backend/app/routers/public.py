@@ -93,9 +93,12 @@ def public_chat(
         raise HTTPException(400, str(e))
 
     # 3. Get LLM using chatbot's stored API key
-    api_key = decrypt(chatbot.llm_api_key) if chatbot.llm_api_key else None
+    raw_key = chatbot.llm_api_key
+    logger.warning(f"PUBLIC_DEBUG chatbot_id={chatbot.id} raw_key_prefix={raw_key[:15] if raw_key else None!r} raw_len={len(raw_key) if raw_key else 0}")
+    api_key = decrypt(raw_key) if raw_key else None
+    logger.warning(f"PUBLIC_DEBUG decrypted_prefix={api_key[:15] if api_key else None!r} decrypted_len={len(api_key) if api_key else 0}")
     llm = get_llm(chatbot.llm_provider, chatbot.llm_model, api_key)
-
+    
     # 4. Query (no memory for public chats — stateless)
     query_engine = index.as_query_engine(
         llm=llm,
