@@ -31,8 +31,12 @@ Thumbs.db
 backend/storage/
 *.db
 *.sqlite
+*.tfvars
+*.tfplan
 infrastructure/K8s/secrets.yaml
 infrastructure/terraform/terraform.tfvars
 infrastructure/terraform/.terraform/
 infrastructure/terraform/.terraform.lock.hcl
 infrastructure/terraform/terraform.tfstate*
+
+

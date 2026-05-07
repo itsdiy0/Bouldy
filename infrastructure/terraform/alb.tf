@@ -43,29 +43,11 @@ resource "aws_lb_target_group" "frontend" {
   }
 }
 
-# HTTP listener — redirects to HTTPS
+# HTTP listener — temporary HTTP-only for demo (no DNS validation available)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"
-
-  default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-}
-
-# HTTPS listener — routes /api/* to API, everything else to frontend
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn   = aws_acm_certificate.main.arn
 
   default_action {
     type             = "forward"
@@ -75,7 +57,7 @@ resource "aws_lb_listener" "https" {
 
 # Rule: /api/* → API service
 resource "aws_lb_listener_rule" "api" {
-  listener_arn = aws_lb_listener.https.arn
+  listener_arn = aws_lb_listener.http.arn
   priority     = 100
 
   action {
@@ -92,7 +74,7 @@ resource "aws_lb_listener_rule" "api" {
 
 # Rule: /static/* → API service (for widget.js)
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = aws_lb_listener.https.arn
+  listener_arn = aws_lb_listener.http.arn
   priority     = 101
 
   action {
@@ -107,7 +89,7 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-# ACM Certificate
+# ACM Certificate — kept for completeness, validation requires DNS access
 resource "aws_acm_certificate" "main" {
   domain_name       = var.domain_name
   validation_method = "DNS"
