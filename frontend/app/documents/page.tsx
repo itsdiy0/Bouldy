@@ -138,25 +138,23 @@ export default function DocumentsPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-full flex flex-col p-6">
-        {/* Error Message */}
+      <div className="h-full flex flex-col p-4 sm:p-6">
         {error && (
           <div
             className="flex items-center gap-2 p-3 rounded-lg mb-4"
             style={{ backgroundColor: "#ef444420", color: "#ef4444" }}
           >
-            <AlertCircle className="w-4 h-4" />
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span className="text-sm">{error}</span>
           </div>
         )}
 
-        {/* Toolbar */}
         <div
-          className="flex items-center justify-between px-4 py-2 rounded-lg mb-4"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-3 sm:px-4 py-2.5 rounded-lg mb-4"
           style={{ backgroundColor: "#715A5A40" }}
         >
-          <div className="flex items-center gap-3">
-            <FileText className="w-4 h-4" style={{ color: "#D3DAD9", opacity: 0.7 }} />
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <FileText className="w-4 h-4 flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.7 }} />
             <span className="text-sm" style={{ color: "#D3DAD9", opacity: 0.7 }}>
               {documents.length} document{documents.length !== 1 ? "s" : ""}
             </span>
@@ -169,7 +167,7 @@ export default function DocumentsPage() {
                     setSelectedIds(new Set(documents.map((d) => d.id)));
                   }
                 }}
-                className="text-xs px-2 py-1 rounded transition-all cursor-pointer"
+                className="text-xs px-2 py-1 rounded transition-all cursor-pointer whitespace-nowrap"
                 style={{ color: "#D3DAD9", opacity: 0.5 }}
                 onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.backgroundColor = "#715A5A"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.backgroundColor = "transparent"; }}
@@ -179,32 +177,27 @@ export default function DocumentsPage() {
             )}
             {selectedIds.size > 0 && (
               <>
-                <span style={{ color: "#D3DAD9", opacity: 0.3 }}>•</span>
-                <span className="text-sm" style={{ color: "#D3DAD9" }}>
+                <span className="hidden sm:inline" style={{ color: "#D3DAD9", opacity: 0.3 }}>•</span>
+                <span className="text-sm whitespace-nowrap" style={{ color: "#D3DAD9" }}>
                   {selectedIds.size} selected
                 </span>
-                {selectedIds.size === 1 && (
-                  <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.4 }}>
-                    (⌘+click for multiple)
-                  </span>
-                )}
                 <button
-  onClick={handleDownload}
-  className="flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors"
-  style={{ color: "#D3DAD9" }}
-  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#715A5A")}
-  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
->
-  <Download className="w-3 h-3" />
-  Download
-</button>
+                  onClick={handleDownload}
+                  className="flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors"
+                  style={{ color: "#D3DAD9" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#715A5A")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                >
+                  <Download className="w-3 h-3" />
+                  <span className="hidden sm:inline">Download</span>
+                </button>
                 <button
                   onClick={handleDelete}
                   className="flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors hover:bg-red-500/20"
                   style={{ color: "#ef4444" }}
                 >
                   <Trash2 className="w-3 h-3" />
-                  Delete
+                  <span className="hidden sm:inline">Delete</span>
                 </button>
                 <button
                   onClick={handleCreateChatbot}
@@ -214,13 +207,13 @@ export default function DocumentsPage() {
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
                   <Bot className="w-3 h-3" />
-                  Create Chatbot
+                  <span className="hidden sm:inline">Create Chatbot</span>
                 </button>
               </>
             )}
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 self-end sm:self-auto">
             <button
               onClick={() => setViewMode("grid")}
               className="p-2 rounded transition-colors"
@@ -244,9 +237,8 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* File Manager Area */}
         <div
-          className="flex-1 rounded-lg p-4 overflow-auto mb-4"
+          className="flex-1 rounded-lg p-3 sm:p-4 overflow-auto mb-4"
           style={{ backgroundColor: "#715A5A20" }}
           onClick={() => setSelectedIds(new Set())}
         >
@@ -260,7 +252,7 @@ export default function DocumentsPage() {
               <p style={{ color: "#D3DAD9", opacity: 0.5 }}>No documents yet</p>
             </div>
           ) : viewMode === "grid" ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
               {documents.map((doc) => {
                 const status = statusConfig[doc.status] || statusConfig.uploaded;
                 return (
@@ -275,43 +267,41 @@ export default function DocumentsPage() {
                       backgroundColor: selectedIds.has(doc.id) ? "#715A5A" : "transparent",
                     }}
                   >
-                    {/* Select Circle */}
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleSelect(doc.id);
                       }}
-                      className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all opacity-40 group-hover:opacity-100 hover:scale-110"
+                      className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all hover:scale-110"
                       style={{
-                        borderColor: selectedIds.has(doc.id) ? "#D3DAD9" : "#D3DAD9",
+                        borderColor: "#D3DAD9",
                         backgroundColor: selectedIds.has(doc.id) ? "#D3DAD9" : "transparent",
-                        opacity: selectedIds.has(doc.id) ? 1 : undefined,
+                        opacity: selectedIds.has(doc.id) ? 1 : 0.6,
                       }}
                     >
                       {selectedIds.has(doc.id) && <Check className="w-3 h-3" style={{ color: "#37353E" }} />}
                     </div>
 
-                    {/* Status Dot */}
                     <div
                       className="absolute top-2 left-2 w-2 h-2 rounded-full"
                       style={{ backgroundColor: status.color }}
                       title={status.label}
                     />
 
-                    <div className="relative mb-2">
+                    <div className="relative mb-2 mt-2">
                       <File
-                        className="w-12 h-12"
+                        className="w-10 h-10 sm:w-12 sm:h-12"
                         style={{ color: fileTypeColors[doc.file_type] || "#9ca3af" }}
                       />
                       <span
-                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold px-1 rounded"
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-bold px-1 rounded"
                         style={{ backgroundColor: "#37353E", color: "#D3DAD9" }}
                       >
                         {doc.file_type.toUpperCase()}
                       </span>
                     </div>
                     <p
-                      className="text-xs text-center truncate w-full"
+                      className="text-[11px] sm:text-xs text-center truncate w-full"
                       style={{ color: "#D3DAD9" }}
                       title={doc.original_filename}
                     >
@@ -335,12 +325,11 @@ export default function DocumentsPage() {
                       e.stopPropagation();
                       handleSelect(doc.id, e);
                     }}
-                    className="flex items-center gap-4 px-3 py-2 rounded cursor-pointer transition-colors group"
+                    className="flex items-center gap-2 sm:gap-4 px-3 py-2 rounded cursor-pointer transition-colors group"
                     style={{
                       backgroundColor: selectedIds.has(doc.id) ? "#715A5A" : "transparent",
                     }}
                   >
-                    {/* Select Circle */}
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
@@ -350,7 +339,7 @@ export default function DocumentsPage() {
                       style={{
                         borderColor: "#D3DAD9",
                         backgroundColor: selectedIds.has(doc.id) ? "#D3DAD9" : "transparent",
-                        opacity: selectedIds.has(doc.id) ? 1 : 0.4,
+                        opacity: selectedIds.has(doc.id) ? 1 : 0.6,
                       }}
                     >
                       {selectedIds.has(doc.id) && <Check className="w-3 h-3" style={{ color: "#37353E" }} />}
@@ -359,21 +348,20 @@ export default function DocumentsPage() {
                       className="w-5 h-5 flex-shrink-0"
                       style={{ color: fileTypeColors[doc.file_type] || "#9ca3af" }}
                     />
-                    <span className="flex-1 text-sm truncate" style={{ color: "#D3DAD9" }}>
+                    <span className="flex-1 text-sm truncate min-w-0" style={{ color: "#D3DAD9" }}>
                       {doc.original_filename}
                     </span>
-                    {/* Status Badge */}
                     <span
-                      className="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full"
+                      className="hidden sm:flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: status.color + "20", color: status.color }}
                     >
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: status.color }} />
                       {status.label}
                     </span>
-                    <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
+                    <span className="hidden md:inline text-xs flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.5 }}>
                       {formatFileSize(doc.file_size)}
                     </span>
-                    <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
+                    <span className="hidden lg:inline text-xs flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.5 }}>
                       {formatDate(doc.created_at)}
                     </span>
                   </div>
@@ -383,9 +371,8 @@ export default function DocumentsPage() {
           )}
         </div>
 
-        {/* Compact Upload Bar */}
         <div
-          className={`flex items-center justify-center gap-3 px-4 py-3 rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+          className={`flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 py-3 rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
             dragActive ? "border-white bg-white/5" : "border-gray-600"
           }`}
           onDragEnter={handleDrag}
@@ -403,10 +390,12 @@ export default function DocumentsPage() {
             onChange={(e) => handleUpload(e.target.files)}
             disabled={isUploading}
           />
-          <Upload className="w-5 h-5" style={{ color: "#D3DAD9", opacity: 0.6 }} />
-          <span className="text-sm" style={{ color: "#D3DAD9", opacity: 0.6 }}>
-            {isUploading ? "Uploading..." : "Drop files here or click to upload"}
-          </span>
+          <div className="flex items-center gap-2">
+            <Upload className="w-5 h-5" style={{ color: "#D3DAD9", opacity: 0.6 }} />
+            <span className="text-sm text-center" style={{ color: "#D3DAD9", opacity: 0.6 }}>
+              {isUploading ? "Uploading..." : "Drop files here or click to upload"}
+            </span>
+          </div>
           <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.4 }}>
             PDF, DOCX, TXT
           </span>

@@ -59,51 +59,46 @@ export default function ChatbotsPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-full flex items-start justify-center p-8 pt-16">
+      <div className="h-full flex items-start justify-center p-4 sm:p-6 md:p-8 pt-8 md:pt-16">
         <div className="w-full max-w-4xl">
-          {/* Container */}
           <div
             className="rounded-xl overflow-hidden"
             style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A40" }}
           >
-            {/* Header */}
             <div
-              className="flex items-center justify-between px-6 py-5"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5"
               style={{ borderBottom: "1px solid #715A5A30" }}
             >
               <div>
-                <h1 className="text-xl font-bold" style={{ color: "#D3DAD9" }}>My Chatbots</h1>
+                <h1 className="text-lg sm:text-xl font-bold" style={{ color: "#D3DAD9" }}>My Chatbots</h1>
                 <p className="text-xs mt-0.5" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                   {chatbots.length} chatbot{chatbots.length !== 1 ? "s" : ""}
                 </p>
               </div>
               <button
                 onClick={() => router.push("/chatbots/create")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                 style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
               >
                 <Plus className="w-4 h-4" />
-                New Chatbot
+                <span className="whitespace-nowrap">New Chatbot</span>
               </button>
             </div>
 
-            {/* Error */}
             {error && (
-              <div className="px-6 pt-4">
+              <div className="px-4 sm:px-6 pt-4">
                 <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
                   {error}
                 </div>
               </div>
             )}
 
-            {/* Loading */}
             {loading && (
               <div className="text-center py-16">
                 <p className="text-sm" style={{ color: "#D3DAD9", opacity: 0.5 }}>Loading...</p>
               </div>
             )}
 
-            {/* Empty State */}
             {!loading && chatbots.length === 0 && (
               <div className="text-center py-16">
                 <Bot className="w-12 h-12 mx-auto mb-3" style={{ color: "#D3DAD9", opacity: 0.2 }} />
@@ -122,7 +117,6 @@ export default function ChatbotsPage() {
               </div>
             )}
 
-            {/* Chatbot List */}
             {!loading && chatbots.length > 0 && (
               <div>
                 {chatbots.map((bot, idx) => {
@@ -130,7 +124,7 @@ export default function ChatbotsPage() {
                   return (
                     <div
                       key={bot.id}
-                      className="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group"
+                      className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 cursor-pointer transition-all group"
                       style={{
                         borderBottom: idx < chatbots.length - 1 ? "1px solid #715A5A20" : "none",
                       }}
@@ -138,9 +132,8 @@ export default function ChatbotsPage() {
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#37353E")}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                     >
-                      {/* Provider Icon */}
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: "#37353E" }}
                       >
                         {meta ? (
@@ -150,7 +143,6 @@ export default function ChatbotsPage() {
                         )}
                       </div>
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold truncate" style={{ color: "#D3DAD9" }}>
                           {bot.name}
@@ -160,49 +152,46 @@ export default function ChatbotsPage() {
                         </p>
                       </div>
 
-                      {/* Meta */}
-                      <div className="flex items-center gap-4 flex-shrink-0">
+                      <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
                         <div className="flex items-center gap-1.5">
                           <FileText className="w-3.5 h-3.5" style={{ color: "#D3DAD9", opacity: 0.3 }} />
                           <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                             {bot.document_count}
                           </span>
                         </div>
-                        <span className="text-xs hidden sm:block" style={{ color: "#D3DAD9", opacity: 0.3 }}>
+                        <span className="text-xs hidden md:block" style={{ color: "#D3DAD9", opacity: 0.3 }}>
                           {formatDate(bot.created_at)}
                         </span>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all">
+                      <div className="flex items-center gap-1 flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/chatbots/${bot.id}/settings`);
                           }}
-                          className="p-1.5 rounded-md transition-all"
+                          className="p-2 sm:p-1.5 rounded-md transition-all"
                           style={{ backgroundColor: "transparent" }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#715A5A40")}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                         >
-                          <Settings className="w-3.5 h-3.5" style={{ color: "#D3DAD9", opacity: 0.6 }} />
+                          <Settings className="w-4 h-4 sm:w-3.5 sm:h-3.5" style={{ color: "#D3DAD9", opacity: 0.6 }} />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setDeleteId(bot.id);
                           }}
-                          className="p-1.5 rounded-md transition-all"
+                          className="p-2 sm:p-1.5 rounded-md transition-all"
                           style={{ backgroundColor: "transparent" }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#ef444420")}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                         >
-                          <Trash2 className="w-3.5 h-3.5" style={{ color: "#ef4444", opacity: 0.6 }} />
+                          <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" style={{ color: "#ef4444", opacity: 0.6 }} />
                         </button>
                       </div>
 
-                      {/* Chevron */}
-                      <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.2 }} />
+                      <ChevronRight className="w-4 h-4 flex-shrink-0 hidden sm:block" style={{ color: "#D3DAD9", opacity: 0.2 }} />
                     </div>
                   );
                 })}
@@ -212,7 +201,6 @@ export default function ChatbotsPage() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "#00000080" }}>
           <div className="rounded-xl p-6 max-w-sm w-full mx-4" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A" }}>

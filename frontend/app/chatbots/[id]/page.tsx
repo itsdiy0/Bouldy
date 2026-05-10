@@ -49,20 +49,19 @@ export default function ChatbotPage() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [loadingSessions, setLoadingSessions] = useState(true);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
-    // Branding
     const primary = chatbot?.accent_primary || "#715A5A";
     const secondary = chatbot?.accent_secondary || "#2D2B33";
     const avatarUrl = chatbot?.avatar_url ? `${API_URL}/api/chatbots/${chatbotId}/avatar?t=${Date.now()}` : null;
 
-    // Bot avatar component
     const BotAvatar = ({ size = 7 }: { size?: number }) => (
         <div
-            className={`w-${size} h-${size} rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden`}
+            className="rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
             style={{
                 width: `${size * 4}px`,
                 height: `${size * 4}px`,
@@ -123,11 +122,13 @@ export default function ChatbotPage() {
     const handleNewChat = () => {
         setActiveSessionId(null);
         setMessages([]);
+        setMobileSidebarOpen(false);
         inputRef.current?.focus();
     };
 
     const handleSelectSession = (sessionId: string) => {
         setActiveSessionId(sessionId);
+        setMobileSidebarOpen(false);
     };
 
     const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
@@ -248,115 +249,141 @@ export default function ChatbotPage() {
         );
     }
 
+    const SessionSidebar = () => (
+        <div
+            className="w-64 flex-shrink-0 flex flex-col h-full"
+            style={{ borderRight: `1px solid ${primary}30`, backgroundColor: secondary }}
+        >
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${primary}30` }}>
+                <span className="text-xs font-medium" style={{ color: "#D3DAD9", opacity: 0.5 }}>Chat History</span>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={handleNewChat}
+                        className="p-1.5 rounded-md cursor-pointer transition-all hover:brightness-125"
+                        style={{ backgroundColor: primary + "20" }}
+                        title="New Chat"
+                    >
+                        <Plus className="w-3.5 h-3.5" style={{ color: "#D3DAD9" }} />
+                    </button>
+                    <button
+                        onClick={() => {
+                            setSidebarOpen(false);
+                            setMobileSidebarOpen(false);
+                        }}
+                        className="p-1.5 rounded-md cursor-pointer transition-all hover:brightness-125"
+                        title="Close sidebar"
+                    >
+                        <PanelLeftClose className="w-3.5 h-3.5" style={{ color: "#D3DAD9", opacity: 0.4 }} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-2">
+                {loadingSessions ? (
+                    <div className="text-center py-8">
+                        <Loader2 className="w-4 h-4 animate-spin mx-auto" style={{ color: "#D3DAD9", opacity: 0.3 }} />
+                    </div>
+                ) : sessions.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                        <MessageSquare className="w-8 h-8 mx-auto mb-2" style={{ color: "#D3DAD9", opacity: 0.15 }} />
+                        <p className="text-xs" style={{ color: "#D3DAD9", opacity: 0.3 }}>No conversations yet</p>
+                    </div>
+                ) : (
+                    sessions.map((s) => (
+                        <div
+                            key={s.id}
+                            onClick={() => handleSelectSession(s.id)}
+                            className="flex items-center gap-2 px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all group"
+                            style={{ backgroundColor: activeSessionId === s.id ? primary + "40" : "transparent" }}
+                            onMouseEnter={(e) => { if (activeSessionId !== s.id) e.currentTarget.style.backgroundColor = primary + "20"; }}
+                            onMouseLeave={(e) => { if (activeSessionId !== s.id) e.currentTarget.style.backgroundColor = "transparent"; }}
+                        >
+                            <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.3 }} />
+                            <span className="text-xs truncate flex-1" style={{ color: "#D3DAD9", opacity: activeSessionId === s.id ? 1 : 0.6 }}>
+                                {s.title}
+                            </span>
+                            <button
+                                onClick={(e) => handleDeleteSession(e, s.id)}
+                                className="p-1 rounded md:opacity-0 md:group-hover:opacity-100 transition-all cursor-pointer"
+                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#ef444420")}
+                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                            >
+                                <Trash2 className="w-3 h-3" style={{ color: "#ef4444" }} />
+                            </button>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <DashboardLayout>
-            <div className="h-full flex">
-                {/* Session Sidebar */}
+            <div className="h-full flex relative">
+                {/* Desktop session sidebar */}
                 {sidebarOpen && (
-                    <div
-                        className="w-64 flex-shrink-0 flex flex-col h-full"
-                        style={{ borderRight: `1px solid ${primary}30`, backgroundColor: secondary }}
-                    >
-                        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${primary}30` }}>
-                            <span className="text-xs font-medium" style={{ color: "#D3DAD9", opacity: 0.5 }}>Chat History</span>
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={handleNewChat}
-                                    className="p-1.5 rounded-md cursor-pointer transition-all hover:brightness-125"
-                                    style={{ backgroundColor: primary + "20" }}
-                                    title="New Chat"
-                                >
-                                    <Plus className="w-3.5 h-3.5" style={{ color: "#D3DAD9" }} />
-                                </button>
-                                <button
-                                    onClick={() => setSidebarOpen(false)}
-                                    className="p-1.5 rounded-md cursor-pointer transition-all hover:brightness-125"
-                                    title="Close sidebar"
-                                >
-                                    <PanelLeftClose className="w-3.5 h-3.5" style={{ color: "#D3DAD9", opacity: 0.4 }} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto py-2">
-                            {loadingSessions ? (
-                                <div className="text-center py-8">
-                                    <Loader2 className="w-4 h-4 animate-spin mx-auto" style={{ color: "#D3DAD9", opacity: 0.3 }} />
-                                </div>
-                            ) : sessions.length === 0 ? (
-                                <div className="text-center py-8 px-4">
-                                    <MessageSquare className="w-8 h-8 mx-auto mb-2" style={{ color: "#D3DAD9", opacity: 0.15 }} />
-                                    <p className="text-xs" style={{ color: "#D3DAD9", opacity: 0.3 }}>No conversations yet</p>
-                                </div>
-                            ) : (
-                                sessions.map((s) => (
-                                    <div
-                                        key={s.id}
-                                        onClick={() => handleSelectSession(s.id)}
-                                        className="flex items-center gap-2 px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all group"
-                                        style={{ backgroundColor: activeSessionId === s.id ? primary + "40" : "transparent" }}
-                                        onMouseEnter={(e) => { if (activeSessionId !== s.id) e.currentTarget.style.backgroundColor = primary + "20"; }}
-                                        onMouseLeave={(e) => { if (activeSessionId !== s.id) e.currentTarget.style.backgroundColor = "transparent"; }}
-                                    >
-                                        <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.3 }} />
-                                        <span className="text-xs truncate flex-1" style={{ color: "#D3DAD9", opacity: activeSessionId === s.id ? 1 : 0.6 }}>
-                                            {s.title}
-                                        </span>
-                                        <button
-                                            onClick={(e) => handleDeleteSession(e, s.id)}
-                                            className="p-1 rounded opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#ef444420")}
-                                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                                        >
-                                            <Trash2 className="w-3 h-3" style={{ color: "#ef4444" }} />
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                    <div className="hidden md:flex">
+                        <SessionSidebar />
                     </div>
+                )}
+
+                {/* Mobile session sidebar (drawer) */}
+                {mobileSidebarOpen && (
+                    <>
+                        <div
+                            className="md:hidden fixed inset-0 bg-black/50 z-40"
+                            onClick={() => setMobileSidebarOpen(false)}
+                        />
+                        <div className="md:hidden fixed inset-y-0 left-0 z-50">
+                            <SessionSidebar />
+                        </div>
+                    </>
                 )}
 
                 {/* Main Chat Area */}
                 <div className="flex-1 flex flex-col h-full min-w-0">
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-3 flex-shrink-0" style={{ borderBottom: `1px solid ${primary}20` }}>
-                        <div className="flex items-center gap-3">
-                            {!sidebarOpen && (
-                                <button
-                                    onClick={() => setSidebarOpen(true)}
-                                    className="p-1.5 rounded-lg transition-all cursor-pointer hover:brightness-110"
-                                    style={{ backgroundColor: secondary }}
-                                    title="Open sidebar"
-                                >
-                                    <PanelLeft className="w-4 h-4" style={{ color: "#D3DAD9" }} />
-                                </button>
-                            )}
+                    <div className="flex items-center justify-between px-3 sm:px-6 py-3 flex-shrink-0 gap-2" style={{ borderBottom: `1px solid ${primary}20` }}>
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            {/* Sidebar toggle - shows on mobile always, on desktop only when closed */}
+                            <button
+                                onClick={() => {
+                                    if (window.innerWidth < 768) {
+                                        setMobileSidebarOpen(true);
+                                    } else {
+                                        setSidebarOpen(true);
+                                    }
+                                }}
+                                className={`p-1.5 rounded-lg transition-all cursor-pointer hover:brightness-110 flex-shrink-0 ${sidebarOpen ? "md:hidden" : ""}`}
+                                style={{ backgroundColor: secondary }}
+                                title="Open sidebar"
+                            >
+                                <PanelLeft className="w-4 h-4" style={{ color: "#D3DAD9" }} />
+                            </button>
                             <button
                                 onClick={() => router.push("/chatbots")}
-                                className="p-1.5 rounded-lg transition-all cursor-pointer hover:brightness-110"
+                                className="hidden sm:block p-1.5 rounded-lg transition-all cursor-pointer hover:brightness-110 flex-shrink-0"
                                 style={{ backgroundColor: secondary }}
                             >
                                 <ChevronLeft className="w-4 h-4" style={{ color: "#D3DAD9" }} />
                             </button>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
                                 <BotAvatar size={8} />
-                                <div>
-                                    <h1 className="text-sm font-semibold" style={{ color: "#D3DAD9" }}>{chatbot?.name}</h1>
-                                    <p className="text-[11px]" style={{ color: primary }}>
+                                <div className="min-w-0">
+                                    <h1 className="text-sm font-semibold truncate" style={{ color: "#D3DAD9" }}>{chatbot?.name}</h1>
+                                    <p className="text-[11px] truncate" style={{ color: primary }}>
                                         {chatbot?.llm_model || "No LLM configured"}
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                             <button
                                 onClick={() => setShowExport(true)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110"
+                                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110"
                                 style={{ backgroundColor: secondary, color: "#D3DAD9", opacity: 0.6 }}
                             >
                                 <ExternalLink className="w-3.5 h-3.5" />
-                                Export
+                                <span className="hidden sm:inline">Export</span>
                             </button>
                             <button
                                 onClick={() => router.push(`/chatbots/${chatbotId}/settings?from=chat`)}
@@ -368,35 +395,32 @@ export default function ChatbotPage() {
                         </div>
                     </div>
 
-                    {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto px-6 py-6">
-                        <div className="max-w-3xl mx-auto space-y-6">
-                            {/* Empty State */}
+                    <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+                        <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
                             {messages.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-20">
+                                <div className="flex flex-col items-center justify-center py-12 sm:py-20">
                                     <BotAvatar size={14} />
-                                    <h2 className="text-base font-medium mb-1 mt-4" style={{ color: "#D3DAD9" }}>
+                                    <h2 className="text-base font-medium mb-1 mt-4 text-center" style={{ color: "#D3DAD9" }}>
                                         Chat with {chatbot?.name}
                                     </h2>
-                                    <p className="text-xs text-center max-w-sm" style={{ color: "#D3DAD9", opacity: 0.4 }}>
+                                    <p className="text-xs text-center max-w-sm px-4" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                                         Ask questions about your documents. Responses are powered by your LLM with
                                         {" "}{chatbot?.document_count} document{chatbot?.document_count !== 1 ? "s" : ""} as context.
                                     </p>
                                 </div>
                             )}
 
-                            {/* Messages */}
                             {messages.map((msg) => (
-                                <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                                <div key={msg.id} className={`flex gap-2 sm:gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                     {msg.role === "assistant" && (
                                         <div className="mt-0.5">
                                             <BotAvatar size={7} />
                                         </div>
                                     )}
 
-                                    <div className={`max-w-[75%] ${msg.role === "user" ? "order-first" : ""}`}>
+                                    <div className={`max-w-[85%] sm:max-w-[75%] min-w-0 ${msg.role === "user" ? "order-first" : ""}`}>
                                         <div
-                                            className="px-4 py-3 rounded-xl text-sm leading-relaxed"
+                                            className="px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm leading-relaxed break-words"
                                             style={{
                                                 backgroundColor: msg.role === "user" ? primary : secondary,
                                                 color: "#D3DAD9",
@@ -413,7 +437,6 @@ export default function ChatbotPage() {
                                             )}
                                         </div>
 
-                                        {/* Sources */}
                                         {msg.sources && msg.sources.length > 0 && (
                                             <div className="mt-2 space-y-1.5">
                                                 {msg.sources.map((src, i) => (
@@ -466,11 +489,10 @@ export default function ChatbotPage() {
                         </div>
                     </div>
 
-                    {/* Input Area */}
-                    <div className="flex-shrink-0 px-6 py-4" style={{ borderTop: `1px solid ${primary}20` }}>
+                    <div className="flex-shrink-0 px-3 sm:px-6 py-3 sm:py-4" style={{ borderTop: `1px solid ${primary}20` }}>
                         <div className="max-w-3xl mx-auto">
                             <div
-                                className="flex items-end gap-3 rounded-xl px-4 py-3"
+                                className="flex items-end gap-2 sm:gap-3 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3"
                                 style={{ backgroundColor: secondary, border: `1px solid ${primary}30` }}
                             >
                                 <textarea
@@ -478,9 +500,9 @@ export default function ChatbotPage() {
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Ask a question about your documents..."
+                                    placeholder="Ask a question..."
                                     rows={1}
-                                    className="flex-1 bg-transparent outline-none resize-none text-sm"
+                                    className="flex-1 bg-transparent outline-none resize-none text-sm min-w-0"
                                     style={{ color: "#D3DAD9", maxHeight: "120px" }}
                                     onInput={(e) => {
                                         const el = e.target as HTMLTextAreaElement;
@@ -500,7 +522,7 @@ export default function ChatbotPage() {
                                     <Send className="w-4 h-4" style={{ color: "#D3DAD9" }} />
                                 </button>
                             </div>
-                            <p className="text-center mt-2 text-[10px]" style={{ color: "#D3DAD9", opacity: 0.2 }}>
+                            <p className="text-center mt-2 text-[10px] hidden sm:block" style={{ color: "#D3DAD9", opacity: 0.2 }}>
                                 Responses are generated from your documents using RAG. Always verify important information.
                             </p>
                         </div>

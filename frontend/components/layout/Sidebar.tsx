@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import { LayoutDashboard, FileText, PlusCircle, Bot, Settings, User, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Bot, Settings, User, LogOut, X } from "lucide-react";
 import { getChatbots } from "@/lib/api";
 
 const navigation = [
@@ -16,7 +16,12 @@ const navigation = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [chatbotCount, setChatbotCount] = useState<number>(0);
@@ -31,23 +36,35 @@ export default function Sidebar() {
     if (session?.user?.id) fetchCount();
   }, [session?.user?.id, pathname]);
 
+  // Close sidebar when navigating on mobile
+  useEffect(() => {
+    onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" });
   };
 
   return (
     <aside
-      className="w-64 min-h-screen flex flex-col"
+      className={`
+        w-64 min-h-screen flex flex-col
+        fixed md:static inset-y-0 left-0 z-50
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0
+      `}
       style={{ backgroundColor: "#37353E" }}
     >
-      <div className="p-1 border-b" style={{ borderColor: "#715A5A40" }}>
+      <div className="p-1 border-b flex items-center justify-between" style={{ borderColor: "#715A5A40" }}>
         <Link href="/dashboard" className="flex items-center gap-3">
           <Image
             src="/Bouldy.svg"
             alt="Bouldy Logo"
             width={60}
             height={60}
-            style={{ margin:"10px 0 10px 20px" }}
+            style={{ margin: "10px 0 10px 20px" }}
           />
           <h1
             className="text-xl font-bold"
@@ -56,6 +73,16 @@ export default function Sidebar() {
             Bouldy
           </h1>
         </Link>
+
+        {/* Close button — only visible on mobile */}
+        <button
+          onClick={onClose}
+          className="md:hidden p-2 mr-2"
+          style={{ color: "#D3DAD9" }}
+          aria-label="Close menu"
+        >
+          <X className="w-6 h-6" />
+        </button>
       </div>
 
       <nav className="flex-1">

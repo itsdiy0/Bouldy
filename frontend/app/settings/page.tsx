@@ -20,35 +20,33 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-full flex items-start justify-center p-8 pt-12">
+      <div className="h-full flex items-start justify-center p-4 sm:p-6 md:p-8 pt-6 md:pt-12">
         <div className="w-full max-w-4xl">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-xl font-bold" style={{ color: "#D3DAD9" }}>Settings</h1>
+          <div className="mb-5 sm:mb-6">
+            <h1 className="text-lg sm:text-xl font-bold" style={{ color: "#D3DAD9" }}>Settings</h1>
             <p className="text-xs mt-1" style={{ color: "#D3DAD9", opacity: 0.4 }}>
               Manage your account and preferences
             </p>
           </div>
 
-          {/* Main container */}
           <div
             className="rounded-xl overflow-hidden"
             style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A40" }}
           >
-            {/* Tabs */}
-            <div className="flex" style={{ borderBottom: "1px solid #715A5A30" }}>
+            <div className="flex overflow-x-auto" style={{ borderBottom: "1px solid #715A5A30" }}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex items-center justify-center gap-2 flex-1 py-3.5 text-sm font-medium transition-all relative cursor-pointer hover:opacity-80"
+                  className="flex items-center justify-center gap-2 flex-1 min-w-[110px] py-3 sm:py-3.5 text-sm font-medium transition-all relative cursor-pointer hover:opacity-80 px-3 whitespace-nowrap"
                   style={{
                     color: tab.id === "danger" && activeTab === tab.id ? "#ef4444" : "#D3DAD9",
                     opacity: activeTab === tab.id ? 1 : 0.4,
                   }}
                 >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label === "Danger Zone" ? "Danger" : tab.label}</span>
                   {activeTab === tab.id && (
                     <div
                       className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-12 rounded-full"
@@ -59,32 +57,29 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            <div className="p-6">
-              {/* Profile Tab */}
+            <div className="p-4 sm:p-6">
               {activeTab === "profile" && (
                 <div className="space-y-5">
-                  {/* User Info */}
                   <div
-                    className="flex items-center gap-4 px-5 py-5 rounded-lg"
+                    className="flex items-center gap-4 px-4 sm:px-5 py-4 sm:py-5 rounded-lg"
                     style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
                   >
                     <div
-                      className="w-14 h-14 rounded-xl flex items-center justify-center"
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: "#715A5A30" }}
                     >
-                      <User className="w-6 h-6" style={{ color: "#715A5A" }} />
+                      <User className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: "#715A5A" }} />
                     </div>
-                    <div>
-                      <p className="text-base font-semibold" style={{ color: "#D3DAD9" }}>
+                    <div className="min-w-0">
+                      <p className="text-sm sm:text-base font-semibold truncate" style={{ color: "#D3DAD9" }}>
                         {session?.user?.name || "User"}
                       </p>
-                      <p className="text-xs" style={{ color: "#D3DAD9", opacity: 0.4 }}>
+                      <p className="text-xs truncate" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                         {session?.user?.email || "—"}
                       </p>
                     </div>
                   </div>
 
-                  {/* Profile Fields */}
                   <div>
                     <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>Name</label>
                     <input
@@ -108,14 +103,13 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  {/* Security */}
                   <div
-                    className="flex items-center justify-between px-5 py-4 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-4 rounded-lg"
                     style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
                   >
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-4 h-4" style={{ color: "#D3DAD9", opacity: 0.5 }} />
-                      <div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Shield className="w-4 h-4 flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.5 }} />
+                      <div className="min-w-0">
                         <p className="text-sm font-medium" style={{ color: "#D3DAD9" }}>Password</p>
                         <p className="text-xs" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                           Change your account password
@@ -123,7 +117,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <button
-                      className="px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110"
+                      className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110 whitespace-nowrap"
                       style={{ backgroundColor: "#715A5A40", color: "#D3DAD9" }}
                     >
                       Change Password
@@ -132,11 +126,10 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Appearance Tab */}
               {activeTab === "appearance" && (
                 <div className="space-y-5">
                   <div
-                    className="flex items-center justify-between px-5 py-4 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-4 rounded-lg"
                     style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
                   >
                     <div>
@@ -147,13 +140,13 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex gap-2">
                       <button
-                        className="px-3 py-1.5 rounded-lg text-xs cursor-pointer"
+                        className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs cursor-pointer"
                         style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
                       >
                         Dark
                       </button>
                       <button
-                        className="px-3 py-1.5 rounded-lg text-xs cursor-pointer"
+                        className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs cursor-pointer"
                         style={{ backgroundColor: "#37353E", color: "#D3DAD9", opacity: 0.4 }}
                       >
                         Light
@@ -167,11 +160,10 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Danger Zone Tab */}
               {activeTab === "danger" && (
                 <div className="space-y-4">
                   <div
-                    className="flex items-center justify-between px-5 py-4 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-4 rounded-lg"
                     style={{ backgroundColor: "#37353E", border: "1px solid #ef444440" }}
                   >
                     <div>
@@ -182,7 +174,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={() => signOut({ callbackUrl: "/login" })}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110"
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110 whitespace-nowrap"
                       style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
                     >
                       <LogOut className="w-3.5 h-3.5" />
@@ -191,7 +183,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div
-                    className="flex items-center justify-between px-5 py-4 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-4 rounded-lg"
                     style={{ backgroundColor: "#37353E", border: "1px solid #ef444440" }}
                   >
                     <div>
@@ -202,7 +194,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={() => setShowDeleteModal(true)}
-                      className="px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110"
+                      className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all hover:brightness-110 whitespace-nowrap"
                       style={{ backgroundColor: "#ef4444", color: "#ffffff" }}
                     >
                       Delete Account
@@ -213,8 +205,8 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Footer links */}
           <div className="flex items-center justify-center gap-6 mt-8">
+            
             <a
               href="https://github.com/itsdiy0/Bouldy"
               target="_blank"
@@ -232,10 +224,9 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Delete Account Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "#00000080" }}>
-          <div className="rounded-xl p-6 max-w-sm w-full mx-4" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "#00000080" }}>
+          <div className="rounded-xl p-6 max-w-sm w-full" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A" }}>
             <h3 className="text-lg font-semibold mb-2" style={{ color: "#ef4444" }}>Delete Account</h3>
             <p className="text-sm mb-6" style={{ color: "#D3DAD9", opacity: 0.6 }}>
               This will permanently delete your account, all chatbots, documents, chat history, and vector indexes. This cannot be undone.

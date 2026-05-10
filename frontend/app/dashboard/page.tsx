@@ -94,16 +94,14 @@ export default function DashboardPage() {
   }
 
   const d = data!;
-  const hasData = d.total_chatbots > 0;
 
   return (
     <DashboardLayout>
-      <div className="h-full overflow-y-auto p-8">
+      <div className="h-full overflow-y-auto p-4 sm:p-6 md:p-8">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: "#D3DAD9" }}>Dashboard</h1>
+              <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "#D3DAD9" }}>Dashboard</h1>
               <p className="text-sm mt-1" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                 Overview of your Bouldy workspace
               </p>
@@ -111,25 +109,24 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => router.push("/documents")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm cursor-pointer transition-all hover:brightness-110"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm cursor-pointer transition-all hover:brightness-110"
                 style={{ backgroundColor: "#2D2B33", color: "#D3DAD9", border: "1px solid #715A5A40" }}
               >
                 <Upload className="w-4 h-4" />
-                Upload Docs
+                <span className="whitespace-nowrap">Upload Docs</span>
               </button>
               <button
                 onClick={() => router.push("/chatbots/create")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:brightness-110"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all hover:brightness-110"
                 style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
               >
                 <Plus className="w-4 h-4" />
-                New Chatbot
+                <span className="whitespace-nowrap">New Chatbot</span>
               </button>
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 md:mb-8">
             {[
               { label: "Chatbots", value: d.total_chatbots, icon: Bot, color: "#715A5A" },
               { label: "Documents", value: d.total_documents, icon: FileText, color: "#3b82f6" },
@@ -138,7 +135,7 @@ export default function DashboardPage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-xl p-5"
+                className="rounded-xl p-4 sm:p-5"
                 style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A30" }}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -146,23 +143,22 @@ export default function DashboardPage() {
                     className="w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: stat.color + "20" }}
                   >
-                    <stat.icon className="w-4.5 h-4.5" style={{ color: stat.color, width: "18px", height: "18px" }} />
+                    <stat.icon style={{ color: stat.color, width: "18px", height: "18px" }} />
                   </div>
                 </div>
-                <p className="text-2xl font-bold" style={{ color: "#D3DAD9" }}>{stat.value}</p>
+                <p className="text-xl sm:text-2xl font-bold" style={{ color: "#D3DAD9" }}>{stat.value}</p>
                 <p className="text-xs mt-0.5" style={{ color: "#D3DAD9", opacity: 0.4 }}>{stat.label}</p>
               </div>
             ))}
           </div>
 
-          {/* Sub stats */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 md:mb-8">
             <div
               className="rounded-xl px-5 py-4 flex items-center justify-between"
               style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A30" }}
             >
               <div className="flex items-center gap-3">
-                <Globe className="w-4 h-4" style={{ color: "#22c55e" }} />
+                <Globe className="w-4 h-4 flex-shrink-0" style={{ color: "#22c55e" }} />
                 <span className="text-sm" style={{ color: "#D3DAD9" }}>Published Chatbots</span>
               </div>
               <span className="text-sm font-bold" style={{ color: "#D3DAD9" }}>{d.published_chatbots}</span>
@@ -172,15 +168,14 @@ export default function DashboardPage() {
               style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A30" }}
             >
               <div className="flex items-center gap-3">
-                <HardDrive className="w-4 h-4" style={{ color: "#8E75B2" }} />
+                <HardDrive className="w-4 h-4 flex-shrink-0" style={{ color: "#8E75B2" }} />
                 <span className="text-sm" style={{ color: "#D3DAD9" }}>Storage Used</span>
               </div>
               <span className="text-sm font-bold" style={{ color: "#D3DAD9" }}>{formatBytes(d.storage_bytes)}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Chatbot Overview — wider */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
             <div
               className="lg:col-span-3 rounded-xl overflow-hidden"
               style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A30" }}
@@ -215,7 +210,7 @@ export default function DashboardPage() {
                       <div
                         key={bot.id}
                         onClick={() => router.push(`/chatbots/${bot.id}`)}
-                        className="flex items-center gap-4 px-5 py-3.5 cursor-pointer transition-all"
+                        className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 cursor-pointer transition-all"
                         style={{ borderBottom: idx < d.chatbot_overview.length - 1 ? "1px solid #715A5A15" : "none" }}
                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#37353E")}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
@@ -232,15 +227,15 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate" style={{ color: "#D3DAD9" }}>{bot.name}</p>
-                          <p className="text-[11px]" style={{ color: meta?.color || "#D3DAD980" }}>
+                          <p className="text-[11px] truncate" style={{ color: meta?.color || "#D3DAD980" }}>
                             {meta?.name || "No provider"}{bot.document_count > 0 ? ` · ${bot.document_count} docs` : ""}
                           </p>
                         </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                           {bot.is_public === "true" && (
                             <Globe className="w-3.5 h-3.5" style={{ color: "#22c55e", opacity: 0.7 }} />
                           )}
-                          <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.3 }}>
+                          <span className="text-xs whitespace-nowrap" style={{ color: "#D3DAD9", opacity: 0.3 }}>
                             {bot.session_count} chat{bot.session_count !== 1 ? "s" : ""}
                           </span>
                         </div>
@@ -251,7 +246,6 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Recent Activity — narrower */}
             <div
               className="lg:col-span-2 rounded-xl overflow-hidden"
               style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A30" }}
@@ -270,7 +264,7 @@ export default function DashboardPage() {
                     <div
                       key={idx}
                       onClick={() => activity.chatbot_id && router.push(`/chatbots/${activity.chatbot_id}`)}
-                      className="px-5 py-3 cursor-pointer transition-all"
+                      className="px-4 sm:px-5 py-3 cursor-pointer transition-all"
                       style={{ borderBottom: idx < d.recent_activity.length - 1 ? "1px solid #715A5A15" : "none" }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#37353E")}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
@@ -278,10 +272,10 @@ export default function DashboardPage() {
                       <p className="text-xs truncate" style={{ color: "#D3DAD9", opacity: 0.8 }}>
                         {activity.message}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px]" style={{ color: "#715A5A" }}>{activity.chatbot_name}</span>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-[10px] truncate" style={{ color: "#715A5A" }}>{activity.chatbot_name}</span>
                         <span className="text-[10px]" style={{ color: "#D3DAD9", opacity: 0.2 }}>·</span>
-                        <span className="text-[10px]" style={{ color: "#D3DAD9", opacity: 0.2 }}>
+                        <span className="text-[10px] whitespace-nowrap" style={{ color: "#D3DAD9", opacity: 0.2 }}>
                           {timeAgo(activity.created_at)}
                         </span>
                       </div>

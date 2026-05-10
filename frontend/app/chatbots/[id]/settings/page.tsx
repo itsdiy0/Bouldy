@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProviderIcon from "@/components/ui/ProviderIcon";
 import BrandingPicker from "@/components/ui/BrandingPicker";
 import { Save, Check, File, Search, Loader2, ChevronLeft, Trash2, Upload } from "lucide-react";
-import { getChatbot, updateChatbot, deleteChatbot, uploadAvatar, getDocuments, validateKey, ChatbotDetail, Document } from "@/lib/api";
+import { getChatbot, updateChatbot, deleteChatbot, uploadAvatar, getDocuments, validateKey, Document } from "@/lib/api";
 import { LLM_PROVIDERS } from "@/lib/llm_providers";
 import EvaluationTab from "@/components/chatbot/EvaluationTab";
 import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
@@ -100,7 +100,6 @@ export default function ChatbotSettingsPage() {
     setError(null);
     setKeyError(null);
 
-    // Validate if LLM config changed
     const llmChanged = provider !== originalProvider || model !== originalModel || apiKey;
     if (llmChanged && provider && model) {
       setValidating(true);
@@ -143,7 +142,6 @@ export default function ChatbotSettingsPage() {
         }
       }
 
-      // Update originals after successful save
       setOriginalProvider(provider);
       setOriginalModel(model);
 
@@ -192,35 +190,34 @@ export default function ChatbotSettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-full flex items-start justify-center p-8 pt-12">
+      <div className="h-full flex items-start justify-center p-4 sm:p-6 md:p-8 pt-6 md:pt-12">
         <div className="w-full max-w-4xl">
-          {/* Top bar */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
+            <div className="flex items-center gap-2 min-w-0">
               <button
                 onClick={() => router.push(fromChat ? `/chatbots/${chatbotId}` : "/chatbots")}
-                className="flex items-center gap-1 text-sm transition-all rounded-lg px-2 py-1.5 cursor-pointer hover:opacity-100"
+                className="flex items-center gap-1 text-sm transition-all rounded-lg px-2 py-1.5 cursor-pointer hover:opacity-100 flex-shrink-0"
                 style={{ color: "#D3DAD9", opacity: 0.5 }}
               >
                 <ChevronLeft className="w-4 h-4" />
-                {fromChat ? "Back to Chat" : "Chatbots"}
+                <span className="hidden sm:inline">{fromChat ? "Back to Chat" : "Chatbots"}</span>
               </button>
-              <span style={{ color: "#715A5A" }}>/</span>
-              <h1 className="text-lg font-bold" style={{ color: "#D3DAD9" }}>{name}</h1>
+              <span className="hidden sm:inline" style={{ color: "#715A5A" }}>/</span>
+              <h1 className="text-base sm:text-lg font-bold truncate" style={{ color: "#D3DAD9" }}>{name}</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
                 style={{ backgroundColor: "#ef4444", color: "#ffffff" }}
               >
                 <Trash2 className="w-4 h-4" />
-                Delete
+                <span className="hidden sm:inline">Delete</span>
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || validating || !name.trim()}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer hover:brightness-110"
                 style={{
                   backgroundColor: saved ? "#10a37f" : "#715A5A",
                   color: "#D3DAD9",
@@ -234,30 +231,27 @@ export default function ChatbotSettingsPage() {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {validating ? "Validating..." : saving ? "Saving..." : saved ? "Saved" : "Save Changes"}
+                <span className="whitespace-nowrap">{validating ? "Validating..." : saving ? "Saving..." : saved ? "Saved" : "Save"}</span>
               </button>
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="p-3 rounded-lg mb-5 text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
               {error}
             </div>
           )}
 
-          {/* Main container */}
           <div
             className="rounded-xl overflow-hidden"
             style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A40" }}
           >
-            {/* Tabs */}
-            <div className="flex" style={{ borderBottom: "1px solid #715A5A30" }}>
+            <div className="flex overflow-x-auto" style={{ borderBottom: "1px solid #715A5A30" }}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex-1 py-3.5 text-sm font-medium transition-all relative cursor-pointer hover:opacity-80"
+                  className="flex-1 min-w-[100px] py-3 sm:py-3.5 text-sm font-medium transition-all relative cursor-pointer hover:opacity-80 whitespace-nowrap px-3"
                   style={{ color: "#D3DAD9", opacity: activeTab === tab.id ? 1 : 0.4 }}
                 >
                   {tab.label}
@@ -271,9 +265,7 @@ export default function ChatbotSettingsPage() {
               ))}
             </div>
 
-            {/* Tab Content */}
-            <div className="p-6">
-              {/* General Tab */}
+            <div className="p-4 sm:p-6">
               {activeTab === "general" && (
                 <div className="space-y-5">
                   <div>
@@ -306,34 +298,33 @@ export default function ChatbotSettingsPage() {
                 </div>
               )}
 
-              {/* Documents Tab */}
               {activeTab === "documents" && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg flex-1 max-w-[260px]"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg flex-1 sm:max-w-[260px]"
                       style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
                     >
-                      <Search className="w-4 h-4" style={{ color: "#D3DAD9", opacity: 0.5 }} />
+                      <Search className="w-4 h-4 flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.5 }} />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search documents..."
-                        className="bg-transparent outline-none text-sm flex-1"
+                        className="bg-transparent outline-none text-sm flex-1 min-w-0"
                         style={{ color: "#D3DAD9" }}
                       />
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between sm:justify-end gap-3">
                       <button
                         onClick={() => setShowUploadModal(true)}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:brightness-110"
                         style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
                       >
                         <Upload className="w-3.5 h-3.5" />
-                        Upload New
+                        <span className="whitespace-nowrap">Upload New</span>
                       </button>
-                      <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.5 }}>
+                      <span className="text-xs whitespace-nowrap" style={{ color: "#D3DAD9", opacity: 0.5 }}>
                         {selectedDocIds.size} of {allDocs.length} selected
                       </span>
                     </div>
@@ -351,7 +342,7 @@ export default function ChatbotSettingsPage() {
                       </button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-3 max-h-[320px] overflow-auto">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-3 max-h-[320px] overflow-auto">
                       {filteredDocs.map((doc) => (
                         <div
                           key={doc.id}
@@ -380,21 +371,17 @@ export default function ChatbotSettingsPage() {
                 </div>
               )}
 
-              {/* LLM Config Tab */}
-
               {activeTab === "llm" && (
                 <div className="space-y-5">
-                  {/* Validation Error */}
                   {keyError && (
                     <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
                       {keyError}
                     </div>
                   )}
 
-                  {/* Provider Selection */}
                   <div>
                     <label className="block text-sm mb-3" style={{ color: "#D3DAD9", opacity: 0.7 }}>Provider</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {LLM_PROVIDERS.map((p) => (
                         <button
                           key={p.id}
@@ -412,7 +399,6 @@ export default function ChatbotSettingsPage() {
                     </div>
                   </div>
 
-                  {/* Model */}
                   {provider && (
                     <div>
                       <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>Model</label>
@@ -452,7 +438,6 @@ export default function ChatbotSettingsPage() {
                     </div>
                   )}
 
-                  {/* API Key / Server URL */}
                   {provider && (
                     <div>
                       <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
@@ -477,12 +462,11 @@ export default function ChatbotSettingsPage() {
                     </div>
                   )}
 
-                  {/* Memory Toggle */}
                   <div
-                    className="flex items-center justify-between px-4 py-4 rounded-lg"
+                    className="flex items-center justify-between px-4 py-4 rounded-lg gap-3"
                     style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium" style={{ color: "#D3DAD9" }}>Conversation Memory</p>
                       <p className="text-xs mt-0.5" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                         Include previous messages as context for follow-up questions
@@ -512,7 +496,6 @@ export default function ChatbotSettingsPage() {
                 </div>
               )}
 
-              {/* Evaluation Tab */}
               {activeTab === "evaluation" && (
                 <EvaluationTab chatbotId={chatbotId} />
               )}
@@ -521,7 +504,6 @@ export default function ChatbotSettingsPage() {
         </div>
       </div>
 
-      {/* Upload Document Modal */}
       {showUploadModal && (
         <UploadDocumentModal
           onClose={() => setShowUploadModal(false)}
@@ -532,10 +514,9 @@ export default function ChatbotSettingsPage() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "#00000080" }}>
-          <div className="rounded-xl p-6 max-w-sm w-full mx-4" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "#00000080" }}>
+          <div className="rounded-xl p-6 max-w-sm w-full" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A" }}>
             <h3 className="text-lg font-semibold mb-2" style={{ color: "#D3DAD9" }}>Delete Chatbot</h3>
             <p className="text-sm mb-6" style={{ color: "#D3DAD9", opacity: 0.6 }}>
               Are you sure? This will permanently delete <strong>{name}</strong>, all its chat sessions, and its vector index. This action cannot be undone.

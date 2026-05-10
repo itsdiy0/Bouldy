@@ -148,22 +148,21 @@ export default function CreateChatbotPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-full flex items-center justify-center p-6">
-        <div className="w-full max-w-3xl rounded-xl p-8" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A40" }}>
-          {/* Header with Steps */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-xl font-bold" style={{ color: "#D3DAD9" }}>Create Chatbot</h1>
-            <div className="flex items-center gap-1">
+      <div className="min-h-full flex items-start sm:items-center justify-center p-3 sm:p-6">
+        <div className="w-full max-w-3xl rounded-xl p-4 sm:p-6 md:p-8" style={{ backgroundColor: "#2D2B33", border: "1px solid #715A5A40" }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <h1 className="text-lg sm:text-xl font-bold" style={{ color: "#D3DAD9" }}>Create Chatbot</h1>
+            <div className="flex items-center gap-1 overflow-x-auto">
               {STEPS.map((step, idx) => {
                 const isActive = currentStep === step.id;
                 const isComplete = isStepComplete(step.id) && currentStep > step.id;
                 const canClick = canNavigateTo(step.id);
                 return (
-                  <div key={step.id} className="flex items-center">
+                  <div key={step.id} className="flex items-center flex-shrink-0">
                     <button
                       onClick={() => handleStepClick(step.id)}
                       disabled={!canClick}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all"
+                      className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-md transition-all"
                       style={{
                         backgroundColor: isActive ? "#715A5A" : isComplete ? "#715A5A60" : "transparent",
                         color: "#D3DAD9",
@@ -183,16 +182,13 @@ export default function CreateChatbotPage() {
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="p-3 rounded-lg mb-4 text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
               {error}
             </div>
           )}
 
-          {/* Step Content */}
           <div className="min-h-[320px]">
-            {/* Step 1: Basics */}
             {currentStep === 1 && (
               <div className="space-y-5">
                 <div>
@@ -227,31 +223,30 @@ export default function CreateChatbotPage() {
               </div>
             )}
 
-            {/* Step 2: Documents */}
             {currentStep === 2 && (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg flex-1 max-w-[240px]" style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}>
-                    <Search className="w-4 h-4" style={{ color: "#D3DAD9", opacity: 0.5 }} />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg flex-1 sm:max-w-[240px]" style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}>
+                    <Search className="w-4 h-4 flex-shrink-0" style={{ color: "#D3DAD9", opacity: 0.5 }} />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search documents..."
-                      className="bg-transparent outline-none text-sm flex-1"
+                      className="bg-transparent outline-none text-sm flex-1 min-w-0"
                       style={{ color: "#D3DAD9" }}
                     />
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-end gap-3">
                     <button
                       onClick={() => setShowUploadModal(true)}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:brightness-110"
                       style={{ backgroundColor: "#715A5A", color: "#D3DAD9" }}
                     >
                       <Upload className="w-3.5 h-3.5" />
-                      Upload New
+                      <span className="whitespace-nowrap">Upload New</span>
                     </button>
-                    <span className="text-xs" style={{ color: "#D3DAD9", opacity: 0.6 }}>
+                    <span className="text-xs whitespace-nowrap" style={{ color: "#D3DAD9", opacity: 0.6 }}>
                       {selectedDocIds.size} of {documents.length} selected
                     </span>
                   </div>
@@ -271,7 +266,7 @@ export default function CreateChatbotPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 max-h-[240px] overflow-auto">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-3 max-h-[240px] overflow-auto">
                     {filteredDocuments.map((doc) => (
                       <div
                         key={doc.id}
@@ -300,20 +295,17 @@ export default function CreateChatbotPage() {
               </div>
             )}
 
-            {/* Step 3: LLM Config */}
             {currentStep === 3 && (
               <div className="space-y-5">
-                {/* Validation Error */}
                 {keyError && (
                   <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "#ef444420", color: "#ef4444" }}>
                     {keyError}
                   </div>
                 )}
 
-                {/* Provider Selection */}
                 <div>
                   <label className="block text-sm mb-3" style={{ color: "#D3DAD9", opacity: 0.7 }}>Provider *</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {LLM_PROVIDERS.map((p) => (
                       <button
                         key={p.id}
@@ -331,7 +323,6 @@ export default function CreateChatbotPage() {
                   </div>
                 </div>
 
-                {/* Model */}
                 {provider && (
                   <div>
                     <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>Model *</label>
@@ -371,7 +362,6 @@ export default function CreateChatbotPage() {
                   </div>
                 )}
 
-                {/* API Key / Server URL */}
                 {provider && (
                   <div>
                     <label className="block text-sm mb-2" style={{ color: "#D3DAD9", opacity: 0.7 }}>
@@ -393,12 +383,11 @@ export default function CreateChatbotPage() {
                   </div>
                 )}
 
-                {/* Memory Toggle */}
                 <div
-                  className="flex items-center justify-between px-4 py-4 rounded-lg"
+                  className="flex items-center justify-between px-4 py-4 rounded-lg gap-3"
                   style={{ backgroundColor: "#37353E", border: "1px solid #715A5A" }}
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium" style={{ color: "#D3DAD9" }}>Conversation Memory</p>
                     <p className="text-xs mt-0.5" style={{ color: "#D3DAD9", opacity: 0.4 }}>
                       Include previous messages as context for follow-up questions
@@ -428,7 +417,6 @@ export default function CreateChatbotPage() {
               </div>
             )}
 
-            {/* Step 4: Review */}
             {currentStep === 4 && (
               <div className="space-y-3">
                 {[
@@ -444,18 +432,17 @@ export default function CreateChatbotPage() {
                 ].map((row, i, arr) => (
                   <div
                     key={row.label}
-                    className={`flex justify-between py-3 ${i < arr.length - 1 ? "border-b" : ""}`}
+                    className={`flex flex-col sm:flex-row sm:justify-between gap-1 py-3 ${i < arr.length - 1 ? "border-b" : ""}`}
                     style={{ borderColor: "#715A5A40" }}
                   >
-                    <span className="text-sm" style={{ color: "#D3DAD9", opacity: 0.6 }}>{row.label}</span>
-                    <span className="text-sm font-medium truncate max-w-[300px]" style={{ color: "#D3DAD9" }}>{row.value}</span>
+                    <span className="text-xs sm:text-sm" style={{ color: "#D3DAD9", opacity: 0.6 }}>{row.label}</span>
+                    <span className="text-sm font-medium truncate sm:max-w-[300px]" style={{ color: "#D3DAD9" }}>{row.value}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Bottom Actions */}
           <div className="flex justify-between mt-6 pt-5 border-t" style={{ borderColor: "#715A5A40" }}>
             <button
               onClick={() => { setCurrentStep((s) => s - 1); setKeyError(null); }}
@@ -505,7 +492,6 @@ export default function CreateChatbotPage() {
         </div>
       </div>
 
-      {/* Upload Document Modal */}
       {showUploadModal && (
         <UploadDocumentModal
           onClose={() => setShowUploadModal(false)}
